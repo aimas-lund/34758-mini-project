@@ -1,0 +1,8 @@
+gazebo-pkgs/gazebo_state_plugins
+/home/david/mini_1_ws/devel/.private/gazebo_state_plugins/cmake.lock /home/david/mini_1_ws/devel/./cmake.lock
+/home/david/mini_1_ws/devel/.private/gazebo_state_plugins/share/gazebo_state_plugins/cmake/gazebo_state_pluginsConfig-version.cmake /home/david/mini_1_ws/devel/share/gazebo_state_plugins/cmake/gazebo_state_pluginsConfig-version.cmake
+/home/david/mini_1_ws/devel/.private/gazebo_state_plugins/share/gazebo_state_plugins/cmake/gazebo_state_pluginsConfig.cmake /home/david/mini_1_ws/devel/share/gazebo_state_plugins/cmake/gazebo_state_pluginsConfig.cmake
+/home/david/mini_1_ws/devel/.private/gazebo_state_plugins/lib/libgazebo_object_info.so /home/david/mini_1_ws/devel/lib/libgazebo_object_info.so
+/home/david/mini_1_ws/devel/.private/gazebo_state_plugins/lib/libgazebo_map_publisher.so /home/david/mini_1_ws/devel/lib/libgazebo_map_publisher.so
+/home/david/mini_1_ws/devel/.private/gazebo_state_plugins/lib/gazebo_state_plugins/gazebo_request_object_info /home/david/mini_1_ws/devel/lib/gazebo_state_plugins/gazebo_request_object_info
+/home/david/mini_1_ws/devel/.private/gazebo_state_plugins/lib/pkgconfig/gazebo_state_plugins.pc /home/david/mini_1_ws/devel/lib/pkgconfig/gazebo_state_plugins.pc

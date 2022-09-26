@@ -1,0 +1,5 @@
+convenience-pkgs/baselib_binding
+/home/david/mini_1_ws/devel/.private/baselib_binding/cmake.lock /home/david/mini_1_ws/devel/./cmake.lock
+/home/david/mini_1_ws/devel/.private/baselib_binding/share/baselib_binding/cmake/baselib_bindingConfig.cmake /home/david/mini_1_ws/devel/share/baselib_binding/cmake/baselib_bindingConfig.cmake
+/home/david/mini_1_ws/devel/.private/baselib_binding/share/baselib_binding/cmake/baselib_bindingConfig-version.cmake /home/david/mini_1_ws/devel/share/baselib_binding/cmake/baselib_bindingConfig-version.cmake
+/home/david/mini_1_ws/devel/.private/baselib_binding/lib/pkgconfig/baselib_binding.pc /home/david/mini_1_ws/devel/lib/pkgconfig/baselib_binding.pc

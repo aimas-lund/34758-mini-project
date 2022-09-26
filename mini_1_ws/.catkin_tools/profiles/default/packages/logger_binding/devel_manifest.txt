@@ -1,0 +1,7 @@
+convenience-pkgs/logger_binding
+/home/david/mini_1_ws/devel/.private/logger_binding/cmake.lock /home/david/mini_1_ws/devel/./cmake.lock
+/home/david/mini_1_ws/devel/.private/logger_binding/share/logger_binding/cmake/logger_bindingConfig-version.cmake /home/david/mini_1_ws/devel/share/logger_binding/cmake/logger_bindingConfig-version.cmake
+/home/david/mini_1_ws/devel/.private/logger_binding/share/logger_binding/cmake/logger_bindingConfig.cmake /home/david/mini_1_ws/devel/share/logger_binding/cmake/logger_bindingConfig.cmake
+/home/david/mini_1_ws/devel/.private/logger_binding/lib/liblogger_binding_c++11.so /home/david/mini_1_ws/devel/lib/liblogger_binding_c++11.so
+/home/david/mini_1_ws/devel/.private/logger_binding/lib/liblogger_binding_boost.so /home/david/mini_1_ws/devel/lib/liblogger_binding_boost.so
+/home/david/mini_1_ws/devel/.private/logger_binding/lib/pkgconfig/logger_binding.pc /home/david/mini_1_ws/devel/lib/pkgconfig/logger_binding.pc
