@@ -2,3 +2,4 @@ build/
 logs/
 devel/
 .catlin_tools/
+.vscode/
