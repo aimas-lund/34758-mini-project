@@ -1,9 +1,0 @@
-mini_1
-/home/david/mini_1_ws/devel/.private/mini_1/cmake.lock /home/david/mini_1_ws/devel/./cmake.lock
-/home/david/mini_1_ws/devel/.private/mini_1/share/mini_1/cmake/mini_1-msg-paths.cmake /home/david/mini_1_ws/devel/share/mini_1/cmake/mini_1-msg-paths.cmake
-/home/david/mini_1_ws/devel/.private/mini_1/share/mini_1/cmake/mini_1Config-version.cmake /home/david/mini_1_ws/devel/share/mini_1/cmake/mini_1Config-version.cmake
-/home/david/mini_1_ws/devel/.private/mini_1/share/mini_1/cmake/mini_1-msg-extras.cmake /home/david/mini_1_ws/devel/share/mini_1/cmake/mini_1-msg-extras.cmake
-/home/david/mini_1_ws/devel/.private/mini_1/share/mini_1/cmake/mini_1Config.cmake /home/david/mini_1_ws/devel/share/mini_1/cmake/mini_1Config.cmake
-/home/david/mini_1_ws/devel/.private/mini_1/share/roseus/ros/mini_1/manifest.l /home/david/mini_1_ws/devel/share/roseus/ros/mini_1/manifest.l
-/home/david/mini_1_ws/devel/.private/mini_1/lib/pkgconfig/mini_1.pc /home/david/mini_1_ws/devel/lib/pkgconfig/mini_1.pc
-/home/david/mini_1_ws/devel/.private/mini_1/lib/python2.7/dist-packages/mini_1/__init__.py /home/david/mini_1_ws/devel/lib/python2.7/dist-packages/mini_1/__init__.py

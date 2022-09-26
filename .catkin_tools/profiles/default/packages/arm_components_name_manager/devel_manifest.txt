@@ -1,6 +1,0 @@
-convenience-pkgs/arm_components_name_manager
-/home/david/mini_1_ws/devel/.private/arm_components_name_manager/cmake.lock /home/david/mini_1_ws/devel/./cmake.lock
-/home/david/mini_1_ws/devel/.private/arm_components_name_manager/share/arm_components_name_manager/cmake/arm_components_name_managerConfig.cmake /home/david/mini_1_ws/devel/share/arm_components_name_manager/cmake/arm_components_name_managerConfig.cmake
-/home/david/mini_1_ws/devel/.private/arm_components_name_manager/share/arm_components_name_manager/cmake/arm_components_name_managerConfig-version.cmake /home/david/mini_1_ws/devel/share/arm_components_name_manager/cmake/arm_components_name_managerConfig-version.cmake
-/home/david/mini_1_ws/devel/.private/arm_components_name_manager/lib/libarm_components_name_manager.so /home/david/mini_1_ws/devel/lib/libarm_components_name_manager.so
-/home/david/mini_1_ws/devel/.private/arm_components_name_manager/lib/pkgconfig/arm_components_name_manager.pc /home/david/mini_1_ws/devel/lib/pkgconfig/arm_components_name_manager.pc

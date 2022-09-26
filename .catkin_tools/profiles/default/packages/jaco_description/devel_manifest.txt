@@ -1,5 +1,0 @@
-jaco-arm-pkgs/jaco_arm/jaco_description
-/home/david/mini_1_ws/devel/.private/jaco_description/cmake.lock /home/david/mini_1_ws/devel/./cmake.lock
-/home/david/mini_1_ws/devel/.private/jaco_description/share/jaco_description/cmake/jaco_descriptionConfig-version.cmake /home/david/mini_1_ws/devel/share/jaco_description/cmake/jaco_descriptionConfig-version.cmake
-/home/david/mini_1_ws/devel/.private/jaco_description/share/jaco_description/cmake/jaco_descriptionConfig.cmake /home/david/mini_1_ws/devel/share/jaco_description/cmake/jaco_descriptionConfig.cmake
-/home/david/mini_1_ws/devel/.private/jaco_description/lib/pkgconfig/jaco_description.pc /home/david/mini_1_ws/devel/lib/pkgconfig/jaco_description.pc

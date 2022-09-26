@@ -1,6 +1,0 @@
-convenience-pkgs/convenience_ros_functions
-/home/david/mini_1_ws/devel/.private/convenience_ros_functions/cmake.lock /home/david/mini_1_ws/devel/./cmake.lock
-/home/david/mini_1_ws/devel/.private/convenience_ros_functions/share/convenience_ros_functions/cmake/convenience_ros_functionsConfig.cmake /home/david/mini_1_ws/devel/share/convenience_ros_functions/cmake/convenience_ros_functionsConfig.cmake
-/home/david/mini_1_ws/devel/.private/convenience_ros_functions/share/convenience_ros_functions/cmake/convenience_ros_functionsConfig-version.cmake /home/david/mini_1_ws/devel/share/convenience_ros_functions/cmake/convenience_ros_functionsConfig-version.cmake
-/home/david/mini_1_ws/devel/.private/convenience_ros_functions/lib/libconvenience_ros_functions.so /home/david/mini_1_ws/devel/lib/libconvenience_ros_functions.so
-/home/david/mini_1_ws/devel/.private/convenience_ros_functions/lib/pkgconfig/convenience_ros_functions.pc /home/david/mini_1_ws/devel/lib/pkgconfig/convenience_ros_functions.pc

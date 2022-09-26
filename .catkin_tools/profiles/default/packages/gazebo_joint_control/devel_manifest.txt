@@ -1,9 +1,0 @@
-joint-control-pkgs/gazebo_joint_control
-/home/david/mini_1_ws/devel/.private/gazebo_joint_control/cmake.lock /home/david/mini_1_ws/devel/./cmake.lock
-/home/david/mini_1_ws/devel/.private/gazebo_joint_control/share/gazebo_joint_control/cmake/gazebo_joint_controlConfig.cmake /home/david/mini_1_ws/devel/share/gazebo_joint_control/cmake/gazebo_joint_controlConfig.cmake
-/home/david/mini_1_ws/devel/.private/gazebo_joint_control/share/gazebo_joint_control/cmake/gazebo_joint_controlConfig-version.cmake /home/david/mini_1_ws/devel/share/gazebo_joint_control/cmake/gazebo_joint_controlConfig-version.cmake
-/home/david/mini_1_ws/devel/.private/gazebo_joint_control/lib/libgazebo_joint_state_publisher.so /home/david/mini_1_ws/devel/lib/libgazebo_joint_state_publisher.so
-/home/david/mini_1_ws/devel/.private/gazebo_joint_control/lib/libgazebo_joint_control.so /home/david/mini_1_ws/devel/lib/libgazebo_joint_control.so
-/home/david/mini_1_ws/devel/.private/gazebo_joint_control/lib/libgazebo_joint_state_client.so /home/david/mini_1_ws/devel/lib/libgazebo_joint_state_client.so
-/home/david/mini_1_ws/devel/.private/gazebo_joint_control/lib/libgazebo_joint_trajectory_server.so /home/david/mini_1_ws/devel/lib/libgazebo_joint_trajectory_server.so
-/home/david/mini_1_ws/devel/.private/gazebo_joint_control/lib/pkgconfig/gazebo_joint_control.pc /home/david/mini_1_ws/devel/lib/pkgconfig/gazebo_joint_control.pc
