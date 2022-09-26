@@ -16,7 +16,7 @@ TMP_OPEN = 0.7
 TMP_CLOSED = 0.005
 
 # publisher parameters
-PUBLISH_RATE = 10       # 10 Hz¨
+PUBLISH_RATE = 10       # 10 Hz
 
 # group parameters
 ORIENTATION_TOLERANCE = 0.01
@@ -39,7 +39,7 @@ def _handle_gripper(tmp) -> None:
     currentJointState.velocity = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     print 'Received!'
     currentJointState.header.stamp = rospy.get_rostime()
-    currentJointState.position = tuple(list(currentJointState.position[:6]) + [tmp] + [tmp]+ [tmp])
+    currentJointState.position = tuple(list(currentJointState.position[:6]) + 3*[tmp])
     rate = rospy.Rate(PUBLISH_RATE)
     for _ in range(3):
         pub.publish(currentJointState)
