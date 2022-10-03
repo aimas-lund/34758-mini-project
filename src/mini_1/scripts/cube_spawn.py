@@ -2,11 +2,9 @@
 
 import rospy, tf, random
 import tf_conversions
-from gazebo_msgs.srv import DeleteModel, SpawnModel
+from gazebo_msgs.srv import DeleteModel, SpawnModel, GetModelState
 from geometry_msgs.msg import *
 from pubobject import publish_object
-
-#p = rospy.Publisher("cubes", name_pos)
 
 def spawn_cubes():
     print("Waiting for gazebo services...")
@@ -18,6 +16,7 @@ def spawn_cubes():
     print("Got it.")
     delete_model = rospy.ServiceProxy("gazebo/delete_model", DeleteModel)
     spawn_model = rospy.ServiceProxy("gazebo/spawn_sdf_model", SpawnModel)
+    model_coordinates = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
 
     with open("./urdf/cube.urdf", "r") as f:
         product_xml = f.read()

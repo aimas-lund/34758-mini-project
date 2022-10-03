@@ -6,7 +6,7 @@ import numpy as np # For random numbers
  
  
 from std_msgs.msg import String
-from geometry_msgs.msg import *
+from geometry_msgs.msg import Pose
 
 
 def publish_object(item_name,item_pose):

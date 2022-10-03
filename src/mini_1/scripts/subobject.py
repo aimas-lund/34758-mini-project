@@ -21,13 +21,12 @@ def sub_cal(msg):
     poses.append(msg)
 
 def get_cube_poses():
-    rospy.loginfo()
 
-    pubs, subs = rostopic.get_topic_list('mini_1')
-    print(pubs)
+    #pubs, subs = rostopic.get_topic_list(master=master)
+    #print(pubs)
 
-    for p in pubs:
-        rospy.Subscriber(p+'/pose', msg.Pose, sub_cal, queue_size=1000)
+    #for p in pubs:
+    rospy.Subscriber('cube0/pose', msg.Pose, sub_cal, queue_size=1000)
     
     return poses
 
