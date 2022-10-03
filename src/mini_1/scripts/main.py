@@ -2,6 +2,7 @@
 
 import rospy
 import cube_spawn
+import subobject
 from navigation import close_gripper, open_gripper, move_arm
 from geometry_msgs.msg import Pose
 
@@ -10,6 +11,8 @@ def init():
   cube_spawn.spawn_cubes()
 
 def locate_cubes():
+  poses = subobject.get_cube_poses()
+  print(poses)
   return
 
 if __name__ == '__main__':
@@ -38,4 +41,4 @@ if __name__ == '__main__':
       open_gripper()
 
   except rospy.ROSInterruptException:
-    print "Something went wrong - please try again"
+    print("Something went wrong - please try again")

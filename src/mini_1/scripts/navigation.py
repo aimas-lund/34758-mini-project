@@ -29,7 +29,7 @@ EEF_STEP = 0.1
 JUMP_THRESHOLD = 0.0
 
 
-def _handle_gripper(tmp) -> None:
+def _handle_gripper(tmp):
     rospy.init_node('test_publish')
 
     # setup publisher
@@ -49,15 +49,15 @@ def _handle_gripper(tmp) -> None:
     print 'end!'
 
 
-def open_gripper() -> None:
+def open_gripper():
     _handle_gripper(TMP_OPEN)
 
 
-def close_gripper() -> None:
+def close_gripper():
     _handle_gripper(TMP_CLOSED)
 
 
-def move_arm(pos: Pose) -> None:
+def move_arm(pos):
     ## First initialize moveit_commander and rospy.
     moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node('move_group_python_interface_tutorial',
