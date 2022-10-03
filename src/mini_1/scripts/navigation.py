@@ -57,7 +57,17 @@ def close_gripper():
     _handle_gripper(TMP_CLOSED)
 
 
-def move_arm(pos):
+def move_arm_two_step(pos: Pose, z_offset: int = 0.5):
+    ## Moves arm above a Pose with a specified offset, after which it moves down to the Pose coordinates.
+    final_pose = pos
+    intermediate_pose = copy.deepcopy(pos)
+    intermediate_pose.position.z = final_pose.position.z + z_offset
+
+    move_arm(intermediate_pose)
+    move_arm(final_pose)
+    
+
+def move_arm(pos: Pose):
     ## First initialize moveit_commander and rospy.
     moveit_commander.roscpp_initialize(sys.argv)
     rospy.init_node('move_group_python_interface_tutorial',
