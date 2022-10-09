@@ -1,3 +1,4 @@
+
 import roslib
 roslib.load_manifest('mini_1')
  
@@ -7,9 +8,12 @@ import rospy
 import tf_conversions
 import moveit_commander
 import moveit_msgs.msg
-from geometry_msgs.msg import Pose
+from geometry_msgs.msg import *
 import shape_msgs.msg as shape_msgs
 from sensor_msgs.msg import JointState
+from getcoordinates import model_coordinates
+import math
+import numpy as np
 
 class Arm:
 
@@ -32,13 +36,6 @@ class Arm:
 
 
     def __init__(self):
-        try:
-            rospy.init_node('arm_group_node',
-                            anonymous=True)
-            #rospy.init_node('test_publish')
-            
-        except Exception:
-            pass
 
         moveit_commander.roscpp_initialize(sys.argv)
         self.robot = moveit_commander.RobotCommander()
@@ -47,23 +44,41 @@ class Arm:
         
         ## trajectories for RVIZ to visualize.
         self.display_trajectory_publisher = rospy.Publisher(
-                                        ('/move_group/display_planned_path'),
-                                            moveit_msgs.msg.DisplayTrajectory)
+                                        '/move_group/display_planned_path',
+                                        moveit_msgs.msg.DisplayTrajectory, 
+                                        queue_size=10)
+        rospy.sleep(2)
+
+        self.p = geometry_msgs.msg.PoseStamped()
+        #The header is generally used to communicate timestamped data in a particular coordinate frame.
+        self.p.header.frame_id = self.robot.get_planning_frame()
+
+        self.group.set_goal_orientation_tolerance(self.ORIENTATION_TOLERANCE)
+        self.group.set_goal_tolerance(self.GOAL_TOLERANCE)
+        self.group.set_goal_joint_tolerance(self.GOAL_JOINT_TOLERANCE)
+        self.group.set_num_planning_attempts(self.PLANNING_ATTEMPTS)
+
+        self.open_gripper()
+        self.group.set_joint_value_target([-0.38807541740850837, -2.2543007891023263, 
+                    0.7487280207426998, -2.785033596945393, 2.121855026824953,
+                    -0.1252666708712793])
+        plan1 = self.group.plan()
+        self.group.go(wait=True)
+        rospy.sleep(3.0)
+
+        self.coordinates = model_coordinates()
 
 
     def _handle_gripper(self, tmp):
-        # setup publisher
-        pub = rospy.Publisher("/jaco/joint_control", JointState, queue_size=1)
-
-        currentJointState = rospy.wait_for_message("/joint_states",JointState)
-        currentJointState.velocity = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        print('Received!')
+        #Publishing to the topic /jaco/joint_control to send movement commands to the robot
+        pub = rospy.Publisher("/jaco/joint_control", JointState, queue_size=10)
+        currentJointState = rospy.wait_for_message("/joint_states",JointState, 10)
         currentJointState.header.stamp = rospy.get_rostime()
-        currentJointState.position = tuple(list(currentJointState.position[:6]) + 3*[tmp])
-        rate = rospy.Rate(self.PUBLISH_RATE)
-        for _ in range(3):
+        currentJointState.position = tuple(list(currentJointState.position[:6]) + [tmp] + [tmp]+ [tmp])
+        for i in range(3):
             pub.publish(currentJointState)
-            # rate.sleep()
+            rospy.sleep(0.1)
+        rospy.sleep(2)
 
 
     def open_gripper(self):
@@ -84,70 +99,90 @@ class Arm:
 
         self.move(intermediate_pose)
         self.move(final_pose)
-        
 
-    def move(self, pos):
+    def pose_command(self, group, final_pos, vertical_offset):
+        pose_goal = group.get_current_pose().pose    
+        pose_goal.orientation = geometry_msgs.msg.Quaternion(
+                    *tf_conversions.transformations.quaternion_from_euler(0.,  -math.pi/2, 0.))
+        pose_goal.position.x = final_pos.position.x
+        pose_goal.position.y = final_pos.position.y
+        pose_goal.position.z = final_pos.position.z+vertical_offset    
+        return pose_goal
 
-                ## We can get the name of the reference frame for this robot
-        print("============ Reference frame: %s" % self.group.get_planning_frame())
-        
-        ## We can also print the name of the end-effector link for this group
-        print("============ Reference frame: %s" % self.group.get_end_effector_link())
-
-        # print ("============ Robot state:")
-        # print (self.robot.get_current_state())
-        # print ("============")
-
-        ## ----- Planning phase -----
-        #group.set_planning_time(0.0)
-        self.group.set_goal_orientation_tolerance(self.ORIENTATION_TOLERANCE)
-        self.group.set_goal_tolerance(self.GOAL_TOLERANCE)
-        self.group.set_goal_joint_tolerance(self.GOAL_JOINT_TOLERANCE)
-        self.group.set_num_planning_attempts(self.PLANNING_ATTEMPTS)
-        self.group.set_max_velocity_scaling_factor(self.MAX_VELOCITY_SCALING_FACTOR)
-        self.group.set_max_acceleration_scaling_factor(self.MAX_ACCELERATION_SCALING_FACTOR)
-
-        waypoints = []
-
-        # creating waypoints
-        waypoints.append(pos)
-
-        #createcartesian  plan
-        (plan, _) = self.group.compute_cartesian_path(
-                                            waypoints,          # waypoints to follow
-                                            self.EEF_STEP,           # eef_step
-                                            self.JUMP_THRESHOLD)     # jump_threshold
-        #plan1 = group.retime_trajectory(robot.get_current_state(), plan1, 1.0)
-
-        print ("============ Waiting while RVIZ displays plan...")
-        rospy.sleep(0.5)
-
-        ## Visualizing tradjectory in RVIZ
-        print ("============ Visualizing tradjectory in RVIZ")
+    def Rviz(self, plan):
+        print("============ Visualizing trajectory in RViz")
         display_trajectory = moveit_msgs.msg.DisplayTrajectory()
         display_trajectory.trajectory_start = self.robot.get_current_state()
         display_trajectory.trajectory.append(plan)
         self.display_trajectory_publisher.publish(display_trajectory)
-        rospy.sleep(2.)
+        print("============ Waiting while cube approach is visualized...")
 
-        #If we're coming from another script we might want to remove the objects
-        if "table" in self.scene.get_known_object_names():
-            self.scene.remove_world_object("table")
-        if "table2" in self.scene.get_known_object_names():
-            self.scene.remove_world_object("table2")
-        if "groundplane" in self.scene.get_known_object_names():
-            self.scene.remove_world_object("groundplane")
+    def move_vertical(self,vertical_offset, final_pos):
+        pose_goal = self.group.get_current_pose().pose
+        waypoint=[]
+        waypoint.append(pose_goal)
+        pose_goal.position.x =final_pos.position.x
+        pose_goal.position.y =final_pos.position.y
+        pose_goal.position.z =final_pos.position.z + vertical_offset
+        waypoint.append(pose_goal)
+        (plan, fraction) = self.group.compute_cartesian_path(waypoint,0.01, 0.0) 
+        return plan
 
-        ## Moving to a pose goal
-        print("--- Executing tradjectory plan ---")
-        self.group.execute(plan,wait=True)
-        rospy.sleep(4.)
+    def move(self):
+        
+        cube_place, cube_name = self.coordinates.get_coordinates(self.p, self.scene)
+        num_cubes = len(cube_name)
+        for i in range(0, num_cubes):
+            num_attempts = 0
+            # place cube in bucket - if more than 2 attempts, assume out of range
+            while not self.coordinates.cube_in_bucket(cube_name[i]) and num_attempts < 2:
+                # clear the scene
+                self.scene.remove_world_object()
+                # reset the scene and store positions of 
+                #cubes and bucket for later reference
+                # (inside for loop in case cube gets moved accidentally)
+                cube_place, cube_name = self.coordinates.get_coordinates(self.p, self.scene)
 
-        ## When finished shut down moveit_commander.
-        # moveit_commander.roscpp_shutdown()
+                # Set position :: above cube
+                pose_goal = self.pose_command(self.group, cube_place[i], 0.3)
+                self.group.set_pose_target(pose_goal)
+                
+                # Place above bucket to above cube
+                plan1 = self.group.plan()  
+                
+                #RViz vizualization
+                self.Rviz( plan1)
+                
+                # Moving to above cube
+                self.group.go(wait=True)
+                
+                # Moving gripper straight down
+                self.group.set_pose_target(pose_goal)
+                plan1= self.move_vertical(0.15, cube_place[i])
+                self.group.execute(plan1,wait=True)
+                #rospy.sleep(3.)
+                self.close_gripper()
+                
+                # Moving gripper straight up
+                plan2 = self.move_vertical(0.5, cube_place[i])
 
-        print("--- Arm moved ---")
-        # print ("============ STOPPING")
-        # R = rospy.Rate(self.PUBLISH_RATE)
-        # while not rospy.is_shutdown():
-        #     R.sleep()
+                #RViz vizualization
+                self.Rviz(plan2)
+                
+                # Moving to a pose goal
+                self.group.execute(plan2,wait=True)
+                
+                # Set position :: above bucket
+                pose_goal = self.pose_command(self.group, self.coordinates.bucket_pos, 0.5)
+                self.group.set_pose_target(pose_goal)
+            
+                plan3 = self.group.plan()
+                #RViz vizualization
+                self.Rviz(self.robot, plan3)
+                # Moving to a pose goal
+                self.group.go(wait=True)  
+                open_gripper()
+                num_attempts += 1
+
+        moveit_commander.roscpp_shutdown()
+
