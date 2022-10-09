@@ -11,15 +11,16 @@ import moveit_msgs.msg
 from geometry_msgs.msg import *
 import shape_msgs.msg as shape_msgs
 from sensor_msgs.msg import JointState
-from getcoordinates import model_coordinates
+from modelcoordinates import model_coordinates
+from gazebo_msgs.msg import ModelStates
 import math
 import numpy as np
 
 class Arm:
 
     # gripper parameters
-    TMP_OPEN = 0.7
-    TMP_CLOSED = 0.005
+    TMP_OPEN = 0.005
+    TMP_CLOSED = 0.7
 
     # publisher parameters
     PUBLISH_RATE = 10       # 10 Hz
@@ -47,6 +48,11 @@ class Arm:
                                         '/move_group/display_planned_path',
                                         moveit_msgs.msg.DisplayTrajectory, 
                                         queue_size=10)
+        
+        self.coordinates = model_coordinates()
+        #Subscribing to the topic /gazebo/model_states to read the positions of the cube and bucket
+        rospy.Subscriber('/gazebo/model_states', ModelStates, self.coordinates.sub_cal , 
+                                                                queue_size=1000)
         rospy.sleep(2)
 
         self.p = geometry_msgs.msg.PoseStamped()
@@ -66,7 +72,6 @@ class Arm:
         self.group.go(wait=True)
         rospy.sleep(3.0)
 
-        self.coordinates = model_coordinates()
 
 
     def _handle_gripper(self, tmp):
@@ -100,8 +105,8 @@ class Arm:
         self.move(intermediate_pose)
         self.move(final_pose)
 
-    def pose_command(self, group, final_pos, vertical_offset):
-        pose_goal = group.get_current_pose().pose    
+    def pose_command(self, final_pos, vertical_offset):
+        pose_goal = self.group.get_current_pose().pose    
         pose_goal.orientation = geometry_msgs.msg.Quaternion(
                     *tf_conversions.transformations.quaternion_from_euler(0.,  -math.pi/2, 0.))
         pose_goal.position.x = final_pos.position.x
@@ -144,14 +149,14 @@ class Arm:
                 cube_place, cube_name = self.coordinates.get_coordinates(self.p, self.scene)
 
                 # Set position :: above cube
-                pose_goal = self.pose_command(self.group, cube_place[i], 0.3)
+                pose_goal = self.pose_command(cube_place[i], 0.3)
                 self.group.set_pose_target(pose_goal)
                 
                 # Place above bucket to above cube
                 plan1 = self.group.plan()  
                 
                 #RViz vizualization
-                self.Rviz( plan1)
+                self.Rviz(plan1)
                 
                 # Moving to above cube
                 self.group.go(wait=True)
@@ -173,15 +178,15 @@ class Arm:
                 self.group.execute(plan2,wait=True)
                 
                 # Set position :: above bucket
-                pose_goal = self.pose_command(self.group, self.coordinates.bucket_pos, 0.5)
+                pose_goal = self.pose_command(self.coordinates.bucket_pos, 0.5)
                 self.group.set_pose_target(pose_goal)
             
                 plan3 = self.group.plan()
                 #RViz vizualization
-                self.Rviz(self.robot, plan3)
+                self.Rviz(plan3)
                 # Moving to a pose goal
                 self.group.go(wait=True)  
-                open_gripper()
+                self.open_gripper()
                 num_attempts += 1
 
         moveit_commander.roscpp_shutdown()
