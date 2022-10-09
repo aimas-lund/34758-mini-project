@@ -1,25 +1,38 @@
 #!/usr/bin/env python
 
+from distutils.spawn import spawn
 import rospy
-import cube_spawn
 import subobject
 import getcoordinates
+import sys
+import time
 
 from navigation import Arm
 from geometry_msgs.msg import Pose
 from gazebo_msgs.srv import GetModelState, GetWorldProperties
 from gazebo_msgs.msg import ModelStates
+from cube_spawn import Spawner
+from argument_handler import ArgumentHandler
 
-import sys
+spawner = Spawner()
+arg_handler = ArgumentHandler()
 
-def init():
+def init(refresh=False):
   rospy.init_node('mini_1')
-  cube_spawn.spawn_cubes()
+
+  if not refresh:
+    spawner.spawn_models()
+    print("Spawned Models!")
+    return
+    
+  spawner.despawn_cubes()
+  spawner.spawn_cubes()
+
 
 if __name__ == '__main__':
   try:
     # Spawn environment
-    init()
+    init(arg_handler.should_run_refresh_mode())
 
     # we should possibly add a little extra in the z-direction
     # TODO: Get these poses!
