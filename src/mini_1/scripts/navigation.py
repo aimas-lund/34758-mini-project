@@ -7,14 +7,13 @@ import copy
 import rospy
 import tf_conversions
 import moveit_commander
-import moveit_msgs.msg
 from geometry_msgs.msg import *
 import shape_msgs.msg as shape_msgs
 from sensor_msgs.msg import JointState
-from modelcoordinates import model_coordinates
 from gazebo_msgs.msg import ModelStates
 import math
 import numpy as np
+import moveit_msgs.msg
 
 class Arm:
 
@@ -43,21 +42,10 @@ class Arm:
         self.scene = moveit_commander.PlanningSceneInterface()
         self.group = moveit_commander.MoveGroupCommander("Arm")
         
-        ## trajectories for RVIZ to visualize.
-        self.display_trajectory_publisher = rospy.Publisher(
-                                        '/move_group/display_planned_path',
-                                        moveit_msgs.msg.DisplayTrajectory, 
-                                        queue_size=10)
-        
-        self.coordinates = model_coordinates()
-        #Subscribing to the topic /gazebo/model_states to read the positions of the cube and bucket
-        rospy.Subscriber('/gazebo/model_states', ModelStates, self.coordinates.sub_cal , 
-                                                                queue_size=1000)
-        rospy.sleep(2)
 
-        self.p = geometry_msgs.msg.PoseStamped()
+        self.pose = geometry_msgs.msg.PoseStamped()
         #The header is generally used to communicate timestamped data in a particular coordinate frame.
-        self.p.header.frame_id = self.robot.get_planning_frame()
+        self.pose.header.frame_id = self.robot.get_planning_frame()
 
         self.group.set_goal_orientation_tolerance(self.ORIENTATION_TOLERANCE)
         self.group.set_goal_tolerance(self.GOAL_TOLERANCE)
@@ -131,63 +119,8 @@ class Arm:
         pose_goal.position.z =final_pos.position.z + vertical_offset
         waypoint.append(pose_goal)
         (plan, fraction) = self.group.compute_cartesian_path(waypoint,0.01, 0.0) 
-        return plan
+        return plan     
 
-    def move(self):
-        
-        cube_place, cube_name = self.coordinates.get_coordinates(self.p, self.scene)
-        num_cubes = len(cube_name)
-        for i in range(0, num_cubes):
-            num_attempts = 0
-            # place cube in bucket - if more than 2 attempts, assume out of range
-            while not self.coordinates.cube_in_bucket(cube_name[i]) and num_attempts < 2:
-                # clear the scene
-                self.scene.remove_world_object()
-                # reset the scene and store positions of 
-                #cubes and bucket for later reference
-                # (inside for loop in case cube gets moved accidentally)
-                cube_place, cube_name = self.coordinates.get_coordinates(self.p, self.scene)
-
-                # Set position :: above cube
-                pose_goal = self.pose_command(cube_place[i], 0.3)
-                self.group.set_pose_target(pose_goal)
-                
-                # Place above bucket to above cube
-                plan1 = self.group.plan()  
-                
-                #RViz vizualization
-                self.Rviz(plan1)
-                
-                # Moving to above cube
-                self.group.go(wait=True)
-                
-                # Moving gripper straight down
-                self.group.set_pose_target(pose_goal)
-                plan1= self.move_vertical(0.15, cube_place[i])
-                self.group.execute(plan1,wait=True)
-                #rospy.sleep(3.)
-                self.close_gripper()
-                
-                # Moving gripper straight up
-                plan2 = self.move_vertical(0.5, cube_place[i])
-
-                #RViz vizualization
-                self.Rviz(plan2)
-                
-                # Moving to a pose goal
-                self.group.execute(plan2,wait=True)
-                
-                # Set position :: above bucket
-                pose_goal = self.pose_command(self.coordinates.bucket_pos, 0.5)
-                self.group.set_pose_target(pose_goal)
-            
-                plan3 = self.group.plan()
-                #RViz vizualization
-                self.Rviz(plan3)
-                # Moving to a pose goal
-                self.group.go(wait=True)  
-                self.open_gripper()
-                num_attempts += 1
 
         moveit_commander.roscpp_shutdown()
 
