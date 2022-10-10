@@ -4,7 +4,6 @@ import rospy, tf, random, os
 import tf_conversions
 from gazebo_msgs.srv import DeleteModel, SpawnModel, GetModelState, GetWorldProperties
 from geometry_msgs.msg import *
-from pubobject import publish_object
 
 class Spawner:
 
@@ -49,8 +48,6 @@ class Spawner:
             item_pose   =   Pose(Point(x=bin_x, y=bin_y,    z=1),   self._ORIENT)
             self.spawn_model(item_name, product_xml, "", item_pose, self._WORLD)
 
-            #Publish cube
-            publish_object(item_name,item_pose)
 
 
     def spawn_bucket(self, pose=_BUCKET_POSE):
@@ -60,8 +57,7 @@ class Spawner:
 
         print("Spawning model:%s", self._BUCKET_NAME)
         self.spawn_model(self._BUCKET_NAME, product_xml, "", pose, self._WORLD)
-        #Publish bucket
-        publish_object(self._BUCKET_NAME, pose)
+
 
 
     def despawn_cubes(self):

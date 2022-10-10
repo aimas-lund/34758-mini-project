@@ -2,7 +2,6 @@
 
 from distutils.spawn import spawn
 import rospy
-import subobject
 import sys
 import time
 

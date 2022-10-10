@@ -84,15 +84,6 @@ class Arm:
         print("Closed gripper!")
 
 
-    def move_two_step(self, pos, z_offset= 0.5):
-        ## Moves arm above a Pose with a specified offset, after which it moves down to the Pose coordinates.
-        final_pose = pos
-        intermediate_pose = copy.deepcopy(pos)
-        intermediate_pose.position.z = final_pose.position.z + z_offset
-
-        self.move(intermediate_pose)
-        self.move(final_pose)
-
     def pose_command(self, final_pos, vertical_offset):
         pose_goal = self.group.get_current_pose().pose    
         pose_goal.orientation = geometry_msgs.msg.Quaternion(
