@@ -49,4 +49,13 @@
     </node>
   </group>
 
+    <!--  ****** Maps *****  -->
+  <arg name="map_file" default="$(find final_project)/maps/map.yaml"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)"
+  />
+
+   <!--  ************** Navigation  ***************  -->
+  <include file="$(find final_project)/launch/move_base.launch.xml">
+    <arg name="model" value="$(arg model)" />
+  </include>
 </launch>
