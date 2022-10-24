@@ -1,0 +1,16 @@
+<launch>
+    <!--<node pkg="mini_1" type="mini_1_node" name="mini_1" respand="true"/>-->
+
+    <include file="$(find final_project)/launch/turtlebot3_world.launch">
+        <arg name="enable_competition" value="false"/>
+    </include>
+
+    <include file="$(find final_project)/launch/spawn_markers.launch">
+    </include>
+
+    <include file="$(find final_project)/launch/spawn_obstacles.launch">
+    </include>
+
+    <include file="$(find final_project)/launch/qr_visp.launch">
+    </include>
+</launch>
