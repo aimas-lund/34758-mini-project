@@ -11,16 +11,16 @@ def unit_vector(vector):
     return vector / np.linalg.norm(vector)
 
 
-def broadcast_marker_tf(realX, realY, hiddenX, hiddenY):
+def broadcast_marker_tf(worldX, worldY, hiddenX, hiddenY):
 
-    real = np.array([realX, realY])
-    hidden = np.array([hiddenX, hiddenY])
+    world_vector = np.array([worldX, worldY])
+    hidden_vector = np.array([hiddenX, hiddenY])
 
     # Calculate rotation:
-    unitvector_real = unit_vector(real)
-    unitvector_hidden = unit_vector(hidden)
+    unitvector_world = unit_vector(world_vector)
+    unitvector_hidden = unit_vector(hidden_vector)
     theta = np.arccos(
-        np.clip(np.dot(unitvector_real, unitvector_hidden), -1.0, 1.0))
+        np.clip(np.dot(unitvector_world, unitvector_hidden), -1.0, 1.0))
 
     theta_in_degrees = theta*180/3.14
     print("Found rotation:", theta_in_degrees, "degrees")
@@ -30,7 +30,7 @@ def broadcast_marker_tf(realX, realY, hiddenX, hiddenY):
         [np.cos(theta), -np.sin(theta)],
         [np.sin(theta), np.cos(theta)]
     ])
-    translation = real - rotation_matrix.dot(hidden)
+    translation = world_vector - rotation_matrix.dot(hidden_vector)
     print("Found translation:", translation)
 
     # Broadcast the found TF
