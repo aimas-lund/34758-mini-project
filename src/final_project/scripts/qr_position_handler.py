@@ -48,7 +48,7 @@ def code_message_cb(msg):
 def object_position_cb(msg):
     print(msg)
 
-    # TODO: Not sure about this part:
+    # TODO: Not sure if this is the correct way to decompose msg
     world_x = msg.position.x
     world_y = msg.position.y
 
