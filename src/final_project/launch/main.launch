@@ -16,4 +16,6 @@
 
     <include file="$(find final_project)/launch/rviz.launch">
     </include>
+
+    <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 odom map 0.001"/>
 </launch>
