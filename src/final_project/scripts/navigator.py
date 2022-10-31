@@ -43,10 +43,3 @@ class Navigator:
         rospy.sleep(3)
 
         return
-
-if __name__ == '__main__':
-    nav = Navigator()
-
-    while True:
-        for pose in nav._waypoints:   
-            nav.move_to_pose(pose)

@@ -3,4 +3,5 @@ logs/
 devel/
 .catkin_tools/
 .vscode/
+*.pyc
 

@@ -13,4 +13,7 @@
 
     <include file="$(find final_project)/launch/qr_visp.launch">
     </include>
+
+    <include file="$(find final_project)/launch/rviz.launch">
+    </include>
 </launch>
