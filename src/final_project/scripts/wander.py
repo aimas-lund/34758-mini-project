@@ -18,20 +18,16 @@ class wander:
  
 
   def move(self,drive = False):
-    print(drive)
     driving_forward = True
     
     twist = Twist()
     if drive:
       if self.g_range_ahead < 0.8:
         driving_forward = False
-        print ("Turn")
       
       else: # we're not driving_forward
         driving_forward = True # we're done spinning, time to go forward!
-        print ("Drive")
       
-      print(driving_forward)
       if driving_forward:
         twist.linear.x = 0.4
         twist.angular.z = 0.0
