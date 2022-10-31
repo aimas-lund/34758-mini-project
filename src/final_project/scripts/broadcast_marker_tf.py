@@ -5,7 +5,12 @@ import tf
 import math
 import numpy as np
 
-class broadcaster:
+class Broadcaster:
+
+    _NODE_NAME = 'tf_broadcaster'
+
+    def __init__(self):
+        self.br = tf.TransformBroadcaster()
     
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
@@ -34,12 +39,11 @@ class broadcaster:
         translation = world_vector - rotation_matrix.dot(hidden_vector)
         print("Found translation:", translation)
 
-        # Broadcast the found TF
-        br = tf.TransformBroadcaster()
         rate = rospy.Rate(10.0)
-        br.sendTransform((translation[0], translation[1], 0),
+        # Broadcast the found TF
+        self.br.sendTransform((translation[0], translation[1], 0),
                         tf.transformations.quaternion_from_euler(0, 0, theta),
                         rospy.Time.now(),
                         "marker_frame",
-                        "world")
+                        "map")
         rate.sleep()
