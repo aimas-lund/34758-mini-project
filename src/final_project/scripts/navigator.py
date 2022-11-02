@@ -1,6 +1,8 @@
 import rospy, tf, actionlib, tf_conversions
 from geometry_msgs.msg import Twist
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+ 
+from geometry_msgs.msg import *
 
 class Navigator:
 
@@ -13,7 +15,10 @@ class Navigator:
 
     def __init__(self):
         self.client = 0
+        self.robot_pos = 0
 
+    def sub_cal(self,msg):
+        self.message = msg
 
     def _goal_pose(self, pose, frame_id=_MAP_FRAME_ID):  
         goal_pose = MoveBaseGoal()
@@ -35,3 +40,24 @@ class Navigator:
         
         self.client.wait_for_result()
         rospy.sleep(3)
+        print('reached goal')
+
+    def get_coordinates(self, p):
+
+        for i in range(len(self.message.name)):
+
+            if self.message.name[i] == "turtlebot3_burger":
+                p.pose.position.x = self.message.pose[i].position.x
+                p.pose.position.y = self.message.pose[i].position.y
+                p.pose.position.z = self.message.pose[i].position.z + 0.09
+                #0.09 is used as the bucket height is 0.18 and the reference frame is found in the middle 
+                q = Quaternion(*tf_conversions.transformations.quaternion_from_euler(
+                                                                0., 0.0, 0.785398))
+                p.pose.orientation.x = q.x
+                p.pose.orientation.y = q.y
+                p.pose.orientation.z = q.z
+                p.pose.orientation.w = q.w
+                # Add the bucket position to the bucket_pos tuple
+                self.robot_pos= self.message.pose[i]             
+        
+        return self.robot_pos
