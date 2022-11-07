@@ -14,9 +14,7 @@ from geometry_msgs.msg import *
 
 if __name__ == '__main__':
   # initialize QR reader and final word variable
-  word = ["", "", "", "", ""]
-  qr_found = [False, False, False, False, False]
-  qr_handler = QRHandler(word, qr_found)  
+  qr_handler = QRHandler()  
   qr_handler.qr_reader()
   # All QR markers have been found when this is true ->   all(i is True for i in QR.qr_found)
 
@@ -30,10 +28,9 @@ if __name__ == '__main__':
   # initialize navigator with ROS move_base
   nav.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
   nav.client.wait_for_server()
-  print('--- Navigator module initialized ---')
+  rospy.loginfo('--- Navigator module initialized ---')
 
   # setup subscribers and publishers
-  scan_sub = rospy.Subscriber('scan', LaserScan, wan.scan_callback)
   scan_sub = rospy.Subscriber('scan', LaserScan, wan.scan_callback)
   cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=1)
   state_change_time = rospy.Time.now() + rospy.Duration(1)
