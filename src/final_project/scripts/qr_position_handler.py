@@ -4,6 +4,9 @@ from geometry_msgs.msg import PoseStamped, Pose
 from coordinate_transformer import coordinateTransformer
 
 class QRHandler:
+    """
+    Look for QR codes and decode/unpack them
+    """
 
     def __init__(self, word, qr_found, world_x, world_y):
         # Code word found with QR codes. Structure: [String,String,String,String,String]
@@ -17,7 +20,12 @@ class QRHandler:
         self.next_qr = Pose()
 
     def unpack_code_message(self,msg):
-        # msg is of the type "X=0.10\r\nY=3.50\r\nX_next=-3.1\r\nY_next=2.0\r\nN=3\r\nL=a"
+        """
+        Input: message string
+        Output: x, y, x_next, y_next, n, l (letter of word)
+
+        msg is of the type "X=0.10\r\nY=3.50\r\nX_next=-3.1\r\nY_next=2.0\r\nN=3\r\nL=a"
+        """
         msg_components = msg.split("\r\n")
 
         x = float(msg_components[0].split("=")[1])
@@ -30,7 +38,10 @@ class QRHandler:
         return x, y, x_next, y_next, n, l
 
 
-    def code_message_cb(self,msg):
+    def code_message_cb(self, msg):
+        """
+        Logic for when a QR message is received (event)
+        """
         data = str(msg.data)
         if data != "":
             x, y, x_next, y_next, n, l = self.unpack_code_message(data)
@@ -43,13 +54,17 @@ class QRHandler:
             self.word[n-1] = l
             self.qr_found[n-1] = True
 
-            print("Found QR number",n,"with letter",l)
-            print("please navigate to", x_next, y_next)
+            rospy.logdebug(" -- qr_position_handler loop --")
+            rospy.logdebug("Found QR number: " + str(n) + ", with letter: " + l)
+            rospy.logdebug("please navigate to: " + str(x_next) + "," + str(y_next) + ", cur pos: " + str(self.world_x) + "," + str(self.world_y))
 
             self.next_qr = self.coordinate_transformer.hidden_cord_to_world_cord(x_next, y_next)        
 
 
     def object_position_cb(self,msg):
+        """
+        Keep track of robot position (event)
+        """
         self.world_x = msg.pose.position.x
         self.world_y = msg.pose.position.y
 

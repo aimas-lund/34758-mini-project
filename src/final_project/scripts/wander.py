@@ -5,6 +5,11 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import LaserScan
 
 class wander:
+  """
+  randomly drive around the map without bumping into objects
+  """
+
+
   def __init__(self):
     self.g_range_ahead = 1
 

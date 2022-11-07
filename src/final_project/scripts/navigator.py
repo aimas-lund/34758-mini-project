@@ -5,6 +5,9 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from geometry_msgs.msg import *
 
 class Navigator:
+    """
+    Navigate to given position (e.g. QR code)
+    """
 
     _MAP_FRAME_ID = 'map'
 
