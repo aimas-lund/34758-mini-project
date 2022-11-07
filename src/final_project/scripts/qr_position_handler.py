@@ -8,14 +8,17 @@ class QRHandler:
     Look for QR codes and decode/unpack them
     """
 
-    def __init__(self, word, qr_found, world_x, world_y):
+    def __init__(self, word, qr_found):
         # Code word found with QR codes. Structure: [String,String,String,String,String]
         self.word = word
         # List to keep track of which QR markers have been discovered. Structure: [Boolean,Boolean,Boolean,Boolean,Boolean]
         self.qr_found = qr_found
-        # Robots position in the world frame:
-        self.world_x = world_x
-        self.world_y = world_y
+
+        self.qr_pose = None
+        self.robot_pose = None
+
+        self.stop_wandering = False
+
         self.coordinate_transformer = coordinateTransformer()
         self.next_qr = Pose()
 
@@ -46,22 +49,24 @@ class QRHandler:
         #rospy.loginfo("Receieved code_message: " + str(msg.data))
 
         data = str(msg.data)
-        if data != "" and self.world_x != 0.0:
-            x, y, x_next, y_next, n, l = self.unpack_code_message(data)
+        # ensure both code_message and object_position have been received
+        if data != "" and self.qr_pose.position.x != 0.0:
+            hidden_x, hidden_y, hidden_x_next, hidden_y_next, n, l = self.unpack_code_message(data)
 
             # If the found QR marker is the first that we have discovered, 
             # we need to set the translation and rotation between the frames
             if not any(self.qr_found):
-                self.coordinate_transformer.calculate_translation_and_rotation(self.world_x, self.world_y, x, y)
+                self.coordinate_transformer.calculate_real_qr_pose(self.robot_pose, self.qr_pose, hidden_x, hidden_y)
+                self.stop_wandering = True
 
             self.word[n-1] = l
             self.qr_found[n-1] = True
 
             rospy.logdebug(" -- qr_position_handler loop --")
             rospy.logdebug("Found QR number: " + str(n) + ", with letter: " + l)
-            rospy.logdebug("please navigate to: " + str(x_next) + "," + str(y_next) + ", cur pos: " + str(self.world_x) + "," + str(self.world_y))
+            #rospy.logdebug("please navigate to: " + str(hidden_x_next) + "," + str(hidden_y_next) + ", cur pos: " + str(self.world_x) + "," + str(self.world_y))
 
-            self.next_qr = self.coordinate_transformer.hidden_cord_to_world_cord(x_next, y_next)        
+            self.next_qr = self.coordinate_transformer.hidden_cord_to_world_cord(hidden_x_next, hidden_y_next)        
 
 
     def object_position_cb(self,msg):
@@ -69,9 +74,10 @@ class QRHandler:
         Keep track of QR position (event)
         Will be (0,0) if no QR has been found yet
         """
-        #rospy.loginfo("Receieved object_position: " + str(msg.pose.position))
-        self.world_x = msg.pose.position.x
-        self.world_y = msg.pose.position.y
+        #rospy.loginfo("Receieved object_position: " + str(msg.pose))
+        self.qr_pose = msg.pose
+
+        # TODO: rotation???
 
 
     def qr_reader(self):
@@ -82,3 +88,6 @@ class QRHandler:
 
     def print_word(self):
         return ''.join(self.word)
+
+    def update_robot_pose(self, robot_pose):
+        self.robot_pose = robot_pose

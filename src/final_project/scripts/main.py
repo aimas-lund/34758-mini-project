@@ -16,8 +16,8 @@ if __name__ == '__main__':
   # initialize QR reader and final word variable
   word = ["", "", "", "", ""]
   qr_found = [False, False, False, False, False]
-  QR = QRHandler(word, qr_found, 0,0)  
-  QR.qr_reader()
+  qr_handler = QRHandler(word, qr_found)  
+  qr_handler.qr_reader()
   # All QR markers have been found when this is true ->   all(i is True for i in QR.qr_found)
 
   # setup wander and Navigator objects
@@ -46,22 +46,27 @@ if __name__ == '__main__':
 
   # start main loop (until all QR codes are found)
   twist = Twist()
-  robot_pose = geometry_msgs.msg.PoseStamped()
-  while not rospy.is_shutdown() or not all(QR.qr_found):
+  while not rospy.is_shutdown() or not all(qr_handler.qr_found):
+
+    robot_pose = nav.get_coordinates()
+    qr_handler.update_robot_pose(robot_pose)
+
     # if no single QR code has been found randomly wander around
-    if not any(QR.qr_found):
+    if not any(qr_handler.qr_found):
       rospy.logdebug("wandering")
-      twist = wan.move(True)
+
+      twist = wan.move(not qr_handler.stop_wandering)
       cmd_vel_pub.publish(twist)
+
     # once at leastone QR has been found navigate to the next QR
     else:
-      next_qr = QR.next_qr  
-      rospy.logdebug("QR found, moving to next QR: " + str(next_qr))
-      nav.move_to_pose(next_qr)
-      robot_pose = nav.get_coordinates(robot_pose)
-      rospy.logdebug("robot_pose: " + str(robot_pose))
+      rospy.logdebug("QR found, moving to next QR: " + str(qr_handler.next_qr))
+
+      next_qr = qr_handler.next_qr  
+      #nav.move_to_pose(next_qr)
+
     rate.sleep()
 
   rospy.loginfo("All QR's have been discovered!")
-  rospy.loginfo("Code word was: " + QR.print_word())
+  rospy.loginfo("Code word was: " + qr_handler.print_word())
   
