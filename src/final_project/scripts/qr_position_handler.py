@@ -7,8 +7,11 @@ class QRHandler:
     """
     Look for QR codes and decode/unpack them
     """
+    _NUM_OF_QR_MARKERS = 5
 
-    def __init__(self, word, qr_found, world_x, world_y):
+    def __init__(self, world_x, world_y, 
+                word=['']*_NUM_OF_QR_MARKERS, 
+                qr_found=[False]*_NUM_OF_QR_MARKERS):
         # Code word found with QR codes. Structure: [String,String,String,String,String]
         self.word = word
         # List to keep track of which QR markers have been discovered. Structure: [Boolean,Boolean,Boolean,Boolean,Boolean]
@@ -62,7 +65,6 @@ class QRHandler:
             rospy.logdebug("please navigate to: " + str(x_next) + "," + str(y_next) + ", cur pos: " + str(self.world_x) + "," + str(self.world_y))
 
             self.next_qr = self.coordinate_transformer.hidden_cord_to_world_cord(x_next, y_next)        
-
 
     def object_position_cb(self,msg):
         """
