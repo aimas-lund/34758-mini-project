@@ -52,14 +52,16 @@ if __name__ == '__main__':
     if not any(qr_handler.qr_found):
       rospy.logdebug("wandering")
 
-      twist = wan.move(not qr_handler.stop_wandering)
+      twist = wan.move(True)
       cmd_vel_pub.publish(twist)
 
     # once at leastone QR has been found navigate to the next QR
     else:
-      rospy.logdebug("QR found, moving to next QR: " + str(qr_handler.next_qr))
+      rospy.logdebug("QR found, moving to next QR: " + str(qr_handler.next_qr_pose))
+      twist = wan.move(False)
+      cmd_vel_pub.publish(twist)
 
-      next_qr = qr_handler.next_qr  
+      next_qr = qr_handler.next_qr_pose  
       #nav.move_to_pose(next_qr)
 
     rate.sleep()
