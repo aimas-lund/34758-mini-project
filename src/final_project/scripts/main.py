@@ -62,8 +62,6 @@ if __name__ == '__main__':
       rospy.logdebug("robot_pose: " + str(robot_pose))
     rate.sleep()
 
-  print("All QR's have been discovered!")
-  print("Code word was")
-  QR.print_word()
-
+  rospy.loginfo("All QR's have been discovered!")
+  rospy.loginfo("Code word was: " + QR.print_word())
   

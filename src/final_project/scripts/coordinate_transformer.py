@@ -35,7 +35,9 @@ class coordinateTransformer:
 
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
-        return vector / np.linalg.norm(vector)
+        norm = np.linalg.norm(vector)
+        assert(norm != 0.0)
+        return vector / norm
 
 
     def calculate_translation_and_rotation(self, worldX, worldY, hiddenX, hiddenY):
@@ -62,5 +64,5 @@ class coordinateTransformer:
         self.translation = translation
         self.rotation = theta
 
-        print("Translation and rotation calculated as:",translation,theta)
+        rospy.loginfo("Translation and rotation calculated as: " + str(translation) + ", " + str(theta))
 

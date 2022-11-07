@@ -42,8 +42,11 @@ class QRHandler:
         """
         Logic for when a QR message is received (event)
         """
+
+        #rospy.loginfo("Receieved code_message: " + str(msg.data))
+
         data = str(msg.data)
-        if data != "":
+        if data != "" and self.world_x != 0.0:
             x, y, x_next, y_next, n, l = self.unpack_code_message(data)
 
             # If the found QR marker is the first that we have discovered, 
@@ -63,8 +66,10 @@ class QRHandler:
 
     def object_position_cb(self,msg):
         """
-        Keep track of robot position (event)
+        Keep track of QR position (event)
+        Will be (0,0) if no QR has been found yet
         """
+        #rospy.loginfo("Receieved object_position: " + str(msg.pose.position))
         self.world_x = msg.pose.position.x
         self.world_y = msg.pose.position.y
 
