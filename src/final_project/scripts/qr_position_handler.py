@@ -21,8 +21,6 @@ class QRHandler:
         self.qr_robot_diff = None
         self.robot_pose = None
 
-        self.stop_wandering = False
-
         self.next_qr_pose = Pose()
 
     def unpack_code_message(self,msg):
