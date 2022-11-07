@@ -21,6 +21,9 @@ class Navigator:
         self.robot_pos = 0
 
     def sub_cal(self,msg):
+        """
+        subscribes to topic /gazebo/model_states
+        """
         self.message = msg
 
     def _goal_pose(self, pose, frame_id=_MAP_FRAME_ID):  
@@ -45,22 +48,26 @@ class Navigator:
         rospy.sleep(3)
         print('reached goal')
 
-    def get_coordinates(self, p):
+    def get_coordinates(self):
+        """
+        loop through all models in scene and get position of robot
+        """
+        pose = geometry_msgs.msg.Pose()
 
         for i in range(len(self.message.name)):
 
             if self.message.name[i] == "turtlebot3_burger":
-                p.pose.position.x = self.message.pose[i].position.x
-                p.pose.position.y = self.message.pose[i].position.y
-                p.pose.position.z = self.message.pose[i].position.z + 0.09
+                pose.position.x = self.message.pose[i].position.x
+                pose.position.y = self.message.pose[i].position.y
+                pose.position.z = self.message.pose[i].position.z + 0.09
                 #0.09 is used as the bucket height is 0.18 and the reference frame is found in the middle 
                 q = Quaternion(*tf_conversions.transformations.quaternion_from_euler(
                                                                 0., 0.0, 0.785398))
-                p.pose.orientation.x = q.x
-                p.pose.orientation.y = q.y
-                p.pose.orientation.z = q.z
-                p.pose.orientation.w = q.w
+                pose.orientation.x = q.x
+                pose.orientation.y = q.y
+                pose.orientation.z = q.z
+                pose.orientation.w = q.w
                 # Add the bucket position to the bucket_pos tuple
                 self.robot_pos= self.message.pose[i]             
         
-        return self.robot_pos
+        return pose

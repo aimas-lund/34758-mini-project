@@ -6,10 +6,16 @@ import math
 import numpy as np
 from geometry_msgs.msg import Pose
 
+import final_util
+
 class coordinateTransformer:
+    """
+    object of qr_position_handler
+    """
 
     translation = [np.nan,np.nan]
     rotation = np.nan
+
         
     def hidden_cord_to_world_cord(self,x,y):
         #if (self.translation == None) or (self.rotation == None):
@@ -32,7 +38,6 @@ class coordinateTransformer:
         return pose
 
 
-
     def unit_vector(self, vector):
         """ Returns the unit vector of the vector.  """
         norm = np.linalg.norm(vector)
@@ -40,7 +45,19 @@ class coordinateTransformer:
         return vector / norm
 
 
-    def calculate_translation_and_rotation(self, worldX, worldY, hiddenX, hiddenY):
+    def calculate_real_qr_pose(self, robot_pose, qr_pose, hiddenX, hiddenY):
+        """
+        based on 
+        """
+
+        real_qr_position = final_util.point_sum(robot_pose.position, qr_pose.position)
+        rospy.loginfo("robot_pose: " + str(robot_pose))
+        rospy.loginfo("qr_pose: " + str(qr_pose))
+        rospy.loginfo("real_qr_position: " + str(real_qr_position))
+
+        # TODO: do we need to use robot_pose.rotation and qr_pose.rotation for a proper real_qr_position
+
+        return
 
         world_vector = np.array([worldX, worldY])
         hidden_vector = np.array([hiddenX, hiddenY])
