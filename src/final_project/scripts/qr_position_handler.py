@@ -1,6 +1,7 @@
 import rospy
 from std_msgs.msg import String
 from geometry_msgs.msg import PoseStamped, Pose
+from debug_handler import DebugPublishHandler
 
 import final_util
 
@@ -12,16 +13,24 @@ class QRHandler:
 
     def __init__(self, 
                 word=['']*_NUM_OF_QR_MARKERS, 
-                qr_found=[False]*_NUM_OF_QR_MARKERS):
+                qr_found=[False]*_NUM_OF_QR_MARKERS,
+                debug=False):
+        # a map of publishers which the QR Handler can publish intermediate values with 
+        self.debug_mode = debug
+        if debug:
+            self.debug_handler = DebugPublishHandler()
+            self.debug_handler.add_publish_channel('qr_pos', rospy.Publisher('qr_pos', Pose, queue_size=1))
+        else:
+            self.debug_handler = None
+        
         # Code word found with QR codes. Structure: [String,String,String,String,String]
         self.word = word
         # List to keep track of which QR markers have been discovered. Structure: [Boolean,Boolean,Boolean,Boolean,Boolean]
         self.qr_found = qr_found
-
         self.qr_robot_diff = None
         self.robot_pose = None
-
         self.next_qr_pose = Pose()
+
 
     def unpack_code_message(self,msg):
         """
@@ -58,6 +67,8 @@ class QRHandler:
             self.qr_found[n-1] = True
 
             current_qr_pose = final_util.calculate_real_qr_pose(self.robot_pose, self.qr_robot_diff)
+            if self.debug_mode:
+                self.debug_handler.publish('qr_pos', current_qr_pose)
 
             self.next_qr_pose = final_util.calculate_next_qr_pose(self.robot_pose, self.qr_robot_diff, hidden_x, hidden_y)
             rospy.logdebug(" -- qr_position_handler loop --")

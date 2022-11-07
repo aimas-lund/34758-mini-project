@@ -3,7 +3,7 @@ from distutils.spawn import spawn
 import rospy, tf, actionlib, tf_conversions
 from wander import wander
 from qr_position_handler import QRHandler
-import sys
+import os
 import argparse
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
@@ -14,12 +14,16 @@ from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-d", "--debug", help = "Configure extra publishers for more information in rviz for debugging purposes.")
+parser.add_argument("-d", "--debug", action='store_true', 
+                    help = "Configure extra publishers for more information in rviz for debugging purposes.")
 args = parser.parse_args()
 
 if __name__ == '__main__':
+  if (args.debug):
+    rospy.logdebug("--- Running '%s' in debug mode ---", os.path.basename(__file__))
+    rospy.logdebug("Will publish additional information to help debug in Rviz.")
   # initialize QR reader and final word variable
-  qr_handler = QRHandler()  
+  qr_handler = QRHandler(debug=args.debug)  
   qr_handler.qr_reader()
   # All QR markers have been found when this is true ->   all(i is True for i in QR.qr_found)
 
@@ -43,9 +47,6 @@ if __name__ == '__main__':
   #Subscribing to the topic /gazebo/model_states to read the positions of the cube and bucket
   rospy.Subscriber('/gazebo/model_states', ModelStates, nav.sub_cal, queue_size=1000)
 
-  if (parser.debug):
-    qr_pos_pub = rospy.Publisher('qr_pos', Pose, queue_size=1)
-  
   rospy.sleep(2)
   rate = rospy.Rate(60)
 
