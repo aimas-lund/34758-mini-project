@@ -34,6 +34,8 @@ class QRHandler:
         self.robot_pose = None
         self.next_qr_pose = Pose()
 
+        self.qr_real = [None]*self._NUM_OF_QR_MARKERS
+        self.qr_hidden = [None]*self._NUM_OF_QR_MARKERS
 
         self.listener = listener
 
@@ -77,16 +79,19 @@ class QRHandler:
         if self.qr_found[n-1]:
             return
 
-        rospy.logdebug("Found " + str(n) " for the first time, computing...")
+        rospy.logdebug("Found " + str(n) + " for the first time, computing...")
     
         # process QR
         self.word[n-1] = l
         self.qr_found[n-1] = True
 
         # calculate the world position for current qr
-        current_qr_pose = final_util.calculate_real_qr_pose(self.robot_pose, self.qr_robot_diff, self.listener)
+        self.qr_real[n-1] = final_util.calculate_real_qr_xy(self.robot_pose, self.qr_robot_diff, self.listener)
         if self.debug_mode:
-            self.debug_handler.publish('qr_pos', current_qr_pose)
+            self.debug_handler.publish('qr_pos', self.qr_real[n-1])
+
+        # safe hidden
+        self.qr_hidden[n-1] = [hidden_x, hidden_y]
 
         # TODO: safe world qr pos to pair with hidden qr pos (array of [hidden, real])
 

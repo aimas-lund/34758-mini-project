@@ -43,22 +43,13 @@ def unit_vector(vector):
     return vector / norm
 
 
-def calculate_real_qr_pose(robot_pose, qr_robot_diff, listener):
+def calculate_real_qr_xy(robot_pose, qr_robot_diff, listener):
     """
     returns world position of QR
     """
 
-    # TODO: we need to use robot_pose.rotation and qr_pose.rotation for this to work
-    # simly adding these two isn't enough, we also tried adding z to x for example because this seemed promising
-    # but that only seemed to work for certain rotations
-
-    # TODO: consider camera angle like SARA and Matilde said
-
-    #real_qr_position = point_sum(robot_pose.position, qr_robot_diff.position)
-    rospy.loginfo("robot_pose: " + str(robot_pose))
-    rospy.loginfo("qr_pose: " + str(qr_robot_diff))
-
-
+    #rospy.loginfo("robot_pose: " + str(robot_pose))
+    #rospy.loginfo("qr_pose: " + str(qr_robot_diff))
 
     pose_camera = [qr_robot_diff.position.x, qr_robot_diff.position.y, qr_robot_diff.position.z, 1]
     try:
@@ -73,33 +64,15 @@ def calculate_real_qr_pose(robot_pose, qr_robot_diff, listener):
 
         rospy.loginfo("p_qr: " + str(p_qr))
 
-        return Pose(Point(p_qr[0], p_qr[1], 0), Quaternion())
-
-        #print(p_qr)
-        #print(msg_qr)
-        # update number of qr code seen
-        nr_qr_found+=1
-        state = 5  # go to check if I need to proceed on or stop
-        obj_msg["pos_w"] = [p_qr[0], p_qr[1]] 
-        pos_worlds.append([p_qr[0], p_qr[1]])
-        print(pos_worlds)
-
-        # append input message to the list of seen qr codes
-        qr_messages.append(obj_msg)
-        # Assign letter to position of id
-        word = word[:obj_msg["id"]-1] + obj_msg["L"] + word[obj_msg["id"]:]
-
-        print("QR code met until now")
-        print(qr_messages)
-        print("word:"+word)
+        return [p_qr[0], p_qr[1]]
     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
         print("Error in the listener lookup transformations")
 
-    return Pose(real_qr_position, Quaternion());
+    return None
 
 def calculate_next_qr_pose(robot_pose, qr_robot_diff, hidden_x, hidden_y, hidden_x_next, hidden_y_next):
 
-    real_qr_pos = calculate_real_qr_pose(robot_pose, qr_robot_diff)
+    real_qr_pos = calculate_real_qr_xy(robot_pose, qr_robot_diff)
 
 
 
