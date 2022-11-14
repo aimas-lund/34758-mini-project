@@ -1,0 +1,23 @@
+<launch>
+
+    <include file="$(find final_project)/launch/turtlebot3_world.launch">
+        <arg name="enable_competition" value="false"/>
+    </include>
+
+    <include file="$(find final_project)/launch/spawn_markers.launch">
+    </include>
+
+    <include file="$(find final_project)/launch/spawn_obstacles.launch">
+    </include>
+
+    <include file="$(find final_project)/launch/navigation.launch">
+    </include>
+
+    <include file="$(find final_project)/launch/rviz.launch">
+    </include>
+
+    <include file="$(find final_project)/launch/qr_visp.launch">
+    </include>
+
+    <node pkg="tf" type="static_transform_publisher" name="odom_to_map" args="0 0 0 0 0 0 odom map 0.001"/>
+</launch>
