@@ -3,7 +3,8 @@ from distutils.spawn import spawn
 import rospy, tf, actionlib, tf_conversions
 from wander import wander
 from qr_position_handler import QRHandler
-import sys
+import os
+import argparse
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist
 import time
@@ -43,9 +44,17 @@ spawn_markers.py:   spawn markers
 wander.py:          move around randomly
 """
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--debug", action='store_true', 
+                    help = "Configure extra publishers for more information in rviz for debugging purposes.")
+args = parser.parse_args()
+
 if __name__ == '__main__':
+  if (args.debug):
+    rospy.logdebug("--- Running '%s' in debug mode ---", os.path.basename(__file__))
+    rospy.logdebug("Will publish additional information to help debug in Rviz.")
   # initialize QR reader and final word variable
-  qr_handler = QRHandler()  
+  qr_handler = QRHandler(debug=args.debug)  
   qr_handler.qr_reader()
   # All QR markers have been found when this is true ->   all(i is True for i in QR.qr_found)
 
@@ -59,6 +68,7 @@ if __name__ == '__main__':
   # initialize navigator with ROS move_base
   nav.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
   nav.client.wait_for_server()
+  rospy.loginfo('--- Navigator module initialized ---')
 
   # setup subscribers and publishers
   scan_sub = rospy.Subscriber('scan', LaserScan, wan.scan_callback)
@@ -67,32 +77,31 @@ if __name__ == '__main__':
 
   #Subscribing to the topic /gazebo/model_states to read the positions of the cube and bucket
   rospy.Subscriber('/gazebo/model_states', ModelStates, nav.sub_cal, queue_size=1000)
-  
   rospy.sleep(2)
   rate = rospy.Rate(60)
 
   # start main loop (until all QR codes are found)
   twist = Twist()
-  for pose in nav._waypoints:
-    nav.move_to_pose(pose)
+  while not rospy.is_shutdown() or not all(qr_handler.qr_found):
 
-  while not rospy.is_shutdown():    
-    if sum(qr_handler.qr_found)<2:
+    robot_pose = nav.get_coordinates()
+    qr_handler.update_robot_pose(robot_pose)
+
+    # if no single QR code has been found randomly wander around
+    if not any(qr_handler.qr_found):
+      rospy.logdebug("wandering")
+
       twist = wan.move(True)
       cmd_vel_pub.publish(twist)
+
+    # once at leastone QR has been found navigate to the next QR
     else:
-        print(qr_handler.qr_found)
-        qr_handler.map_qr_transformation()
-        current_x, current_y, next_x, next_y = qr_handler.getNextPos()
-        print(current_x, current_y, next_x, next_y)
-        x_target,y_target = qr_handler.calculate_QR_XY(next_x, next_y)
-        print(x_target,y_target)
-        x_target,y_target, rot = qr_handler.calculate_destination(x_target, y_target)
-        print(x_target,y_target,rot)
-        pose = [( round(x_target, 2), round(y_target, 2), 0.0), (0.0, 0.0, 0.0, 1.0)]
-        print(pose)
-        nav.move_to_pose(pose)
-        print('#####################################################')
+      rospy.logdebug("QR found, moving to next QR: " + str(qr_handler.next_qr_pose))
+      twist = wan.move(False)
+      cmd_vel_pub.publish(twist)
+
+      next_qr = qr_handler.next_qr_pose  
+      #nav.move_to_pose(next_qr)
 
     rate.sleep()
 

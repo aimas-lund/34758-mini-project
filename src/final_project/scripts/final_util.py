@@ -51,14 +51,22 @@ def calculate_real_qr_pose(robot_pose, qr_robot_diff):
     # simly adding these two isn't enough, we also tried adding z to x for example because this seemed promising
     # but that only seemed to work for certain rotations
     real_qr_position = point_sum(robot_pose.position, qr_robot_diff.position)
+    rospy.loginfo("robot_pose: " + str(robot_pose))
+    rospy.loginfo("qr_pose: " + str(qr_robot_diff))
+    rospy.loginfo("real_qr_position: " + str(real_qr_position))
 
     return Pose(real_qr_position, Quaternion());
 
-def calculate_next_qr_pose(robot_pose, qr_pose, hidden_x, hidden_y):
+def calculate_next_qr_pose(robot_pose, qr_robot_diff, hidden_x, hidden_y, hidden_x_next, hidden_y_next):
+
+    real_qr_pos = calculate_real_qr_pose(robot_pose, qr_robot_diff)
+
+
 
     # TODO: how we calculate this
+    real_qr_next_pos = Point(hidden_x_next, hidden_y_next) # wrong
 
-    return Pose()
+    return Pose(real_qr_next_pos, Quaternion())
     world_vector = np.array([worldX, worldY])
     hidden_vector = np.array([hidden_x, hidden_y])
 

@@ -1,25 +1,9 @@
 import rospy
 from std_msgs.msg import String
 from geometry_msgs.msg import PoseStamped, Pose
+from debug_handler import DebugPublishHandler
 
 import final_util
-import math
-import numpy as np
-
-class QR:
-
-    def __init__(self,x,y,x_next,y_next,n,l):
-        self.x = x
-        self.y = y
-        self.x_next = x_next
-        self.y_next = y_next
-        self.n = n
-        self.l = l
-
-    def getvalues(self):
-        return self.x,self.y,self.x_next,self.y_next
-
-
 
 class QRHandler:
     """
@@ -29,21 +13,24 @@ class QRHandler:
 
     def __init__(self, 
                 word=['']*_NUM_OF_QR_MARKERS, 
-                qr_found=[False]*_NUM_OF_QR_MARKERS):
+                qr_found=[False]*_NUM_OF_QR_MARKERS,
+                debug=False):
+        # a map of publishers which the QR Handler can publish intermediate values with 
+        self.debug_mode = debug
+        if debug:
+            self.debug_handler = DebugPublishHandler()
+            self.debug_handler.add_publish_channel('qr_pos', rospy.Publisher('qr_pos', Pose, queue_size=1))
+        else:
+            self.debug_handler = None
+        
         # Code word found with QR codes. Structure: [String,String,String,String,String]
         self.word = word
         # List to keep track of which QR markers have been discovered. Structure: [Boolean,Boolean,Boolean,Boolean,Boolean]
         self.qr_found = qr_found
-
         self.qr_robot_diff = None
         self.robot_pose = None
-
-        self.stop_wandering = False
-
         self.next_qr_pose = Pose()
 
-        self.QRcodes = ['']*self._NUM_OF_QR_MARKERS
-        self.QRcodesfound = ['']*self._NUM_OF_QR_MARKERS
 
     def unpack_code_message(self,msg):
         """
@@ -75,19 +62,18 @@ class QRHandler:
         # ensure both code_message and object_position have been received
         if data != "" and self.qr_robot_diff.position.x != 0.0:
             hidden_x, hidden_y, hidden_x_next, hidden_y_next, n, l = self.unpack_code_message(data)
-            print(hidden_x, hidden_y, hidden_x_next, hidden_y_next, n, l )
 
-            if l not in self.QRcodesfound:
-                self.word[n-1] = l
-                self.qr_found[n-1] = True
+            self.word[n-1] = l
+            self.qr_found[n-1] = True
 
-                qr = QR(hidden_x,hidden_y,hidden_x_next,hidden_y_next,n,l)
-                self.QRcodes[n-1]=qr
-                self.QRcodesfound[n-1]=l
+            current_qr_pose = final_util.calculate_real_qr_pose(self.robot_pose, self.qr_robot_diff)
+            if self.debug_mode:
+                self.debug_handler.publish('qr_pos', current_qr_pose)
 
-            #current_qr_pose = final_util.calculate_real_qr_pose(self.robot_pose, self.qr_robot_diff)
-
-            #   self.next_qr_pose = final_util.calculate_next_qr_pose(self.robot_pose, self.qr_robot_diff, hidden_x, hidden_y)
+            self.next_qr_pose = final_util.calculate_next_qr_pose(self.robot_pose, self.qr_robot_diff, hidden_x, hidden_y, hidden_x_next, hidden_y_next)
+            rospy.logdebug(" -- qr_position_handler loop --")
+            rospy.logdebug("Found QR number: " + str(n) + ", with letter: " + l + ", at real position: " + str(current_qr_pose))
+            rospy.logdebug("navigate to: " + str(self.next_qr_pose.position) + ", from current pos: " + str(self.robot_pose.position))
 
             # TODO: calculate the real to hidden translation system
              
@@ -98,6 +84,7 @@ class QRHandler:
         Will be (0,0) if no QR has been found yet
         """
         #rospy.loginfo("Receieved object_position: " + str(msg.pose))
+       
         self.qr_robot_diff = msg.pose
 
 
@@ -112,46 +99,3 @@ class QRHandler:
 
     def update_robot_pose(self, robot_pose):
         self.robot_pose = robot_pose
-
-    def calculate_QR_XY(self,x1, y1):
-
-        x=x1*self.ctheta-y1*math.sqrt(1-math.pow(self.ctheta,2))+self.X
-        y=x1*math.sqrt(1-math.pow(self.ctheta,2))+y1*self.ctheta+self.Y
-
-        return x, y
-    
-    def calculate_destination(self,next_x, next_y):
-        beta=math.atan2(next_y, next_x)
-        if beta<0:
-            beta=beta+2*math.pi
-        #rot=beta-alpha
-        if beta<=10*math.pi/180 or beta>=350*math.pi/180: 
-            new_x=next_x-1.5
-            new_y=next_y
-            rot=0
-        if beta>10*math.pi/180 and beta<170*math.pi/180 : 
-            new_x=next_x
-            new_y=next_y-1.5
-            rot=3.14/2
-        if beta>=170*math.pi/180 and beta<190*math.pi/180 : 
-            new_x=next_x+1.5
-            new_y=next_y
-            rot=3.14
-        if beta>=190*math.pi/180 and beta<350*math.pi/180 : 
-            new_x=next_x
-            new_y=next_y+1.5
-            rot=3*3.14/2
-        return new_x, new_y, rot
-
-    def map_qr_transformation(self):
-        qrs= self.QRcodes
-        print(qrs)
-        indices = np.where(self.qr_found)[0]
-        x1, y1, xn1, yn1 = qrs[indices[0]].getvalues()
-        x2, y2, xn2, yn2 = qrs[indices[1]].getvalues()
-        num=(x1-x2)*(xn1-xn2)+(y1-y2)*(yn1-yn2)
-        det=(xn1-xn2)*(xn1-xn2)+(yn1-yn2)*(yn1-yn2)
-        self.ctheta=num/det
-
-        self.X=x1-xn1*self.ctheta+yn1*math.sqrt(1-math.pow(self.ctheta,2))
-        self.Y=y1-xn1*math.sqrt(1-math.pow(self.ctheta,2))-yn1*self.ctheta
