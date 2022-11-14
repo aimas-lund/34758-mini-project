@@ -44,6 +44,21 @@ range_ahead.py:     see how much distance is free in front of robot
 spawn_barriers.py:  spawn barriers
 spawn_markers.py:   spawn markers
 wander.py:          move around randomly
+
+
+expected default positions (in array order)
+[[-4.65, 2.95], [-6, 2.95], [-6.7, 0.4], [-5.5, -3], [-3.5, -3]]
+hidden:
+[x,[2.67, 3.23],[0.1, 3.5],[-3.08, 1.95],[-3.08, 0.0]]
+
+
+rot mat:
+[[ 0.9995821  -0.02890712]
+ [ 0.02890712  0.9995821 ]]
+
+trans mat:
+[-1.489408242232296, 0.7119754831249485]
+
 """
 
 parser = argparse.ArgumentParser()
@@ -90,8 +105,11 @@ if __name__ == '__main__':
   rospy.sleep(2)
   rate = rospy.Rate(60)
 
+  rospy.logdebug("test message", logger_name="main.py")
+
   # start main loop (until all QR codes are found)
   twist = Twist()
+  prev_visit = 99
   while not rospy.is_shutdown():
 
     # every update pass the robot position to the qr_handler
@@ -104,8 +122,17 @@ if __name__ == '__main__':
       twist = wan.move(True)
       cmd_vel_pub.publish(twist)
 
+      qr_handler.qr_found = [True, True, False, False, False]
+      qr_handler.qr_real[4] = [-3.5, -3]
+      qr_handler.qr_real[1] = [-6, 2.95]
+      qr_handler.qr_hidden[4] = [-3.08, 0.0]
+      qr_handler.qr_hidden[1] = [2.67, 3.23]
+      qr_handler.qr_hidden[2] =[0.1, 3.5]
+      qr_handler.word[4] = 't'
+      qr_handler.word[1] = 'M'
+
     # execute translation computation once when 2 QRs have been found
-    elif sum(qr_handler.qr_found) == 2 and qr_handler.translation == None:
+    elif (sum(qr_handler.qr_found) >= 2) and (qr_handler.translation == None):
       # compute translation matrix
       qr_handler.transInit()
 
@@ -121,7 +148,13 @@ if __name__ == '__main__':
       indices_missing_word = [i for i in range(qr_handler.number_of_qr_markers) if (qr_handler.word[i] == "" and qr_handler.qr_real[i] != None)]
       rospy.logdebug("Missing located indices: " + str(indices_missing_word))
       
-      goal = qr_handler.qr_real[indices_missing_word[0]]
+      if indices_missing_word[0] == prev_visit and len(indices_missing_word) > 1:
+        goal = qr_handler.qr_real[indices_missing_word[1]]
+        prev_visit = indices_missing_word[1]
+      else:
+        goal = qr_handler.qr_real[indices_missing_word[0]]
+        prev_visit = indices_missing_word[0]
+
       rospy.logdebug("Navigating to QR marker at ({}, {})".format(goal[0], goal[1]))
       nav.move_to_pose(Pose(Point(goal[0], goal[1], 0), robot_pose.orientation))
 

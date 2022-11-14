@@ -64,11 +64,13 @@ class QRHandler:
         c, s = np.cos(theta), np.sin(theta)
         self.rotation = np.array(((c, -s), (s, c)))
         self.translation = np.subtract(realPos1, self.rotation.dot(hiddenPos1)).tolist()
+        rospy.logdebug("{}: Obtained rotation matrix -> {}".format(self._TAG, self.rotation))
+        rospy.logdebug("{}: Obtained translation matrix -> {}".format(self._TAG, self.translation))
 
 
     def calculate_real(self, i):
         rospy.logdebug(self._TAG + ": Calculating real position for qr_marker " + str(i) + " from hidden: " + str(self.qr_hidden[i]))
-        real_transform = self.rotation.dot(self.qr_hidden[i]) + self.translation
+        real_transform = np.dot(self.rotation, self.qr_hidden[i]) + self.translation
         self.qr_real[i] = real_transform.tolist()
         rospy.logdebug(self._TAG + ": Real position for qr_marker " + str(i) + " is: " + str(self.qr_real[i]))
         rospy.logdebug(self._TAG + ": qr_real array: " + str(self.qr_real))
@@ -154,7 +156,8 @@ class QRHandler:
         #rospy.loginfo("Receieved object_position: " + str(msg.pose))
         # covariance for x,x and y,y
         threshold = msg.pose.covariance[0] + msg.pose.covariance[7]
-        if threshold < 1e-8:
+        rospy.logdebug("Covariance: " + str(threshold))
+        if threshold < 1e-5:
             self.qr_robot_diff = msg.pose.pose
 
 
