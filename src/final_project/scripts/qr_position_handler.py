@@ -39,6 +39,7 @@ class QRHandler:
 
         self.qr_real = [None]*self._NUM_OF_QR_MARKERS
         self.qr_hidden = [None]*self._NUM_OF_QR_MARKERS
+        #self.qr_hidden_next =[None]*self._NUM_OF_QR_MARKERS
 
         self.listener = listener
 
@@ -63,6 +64,9 @@ class QRHandler:
         c, s = np.cos(theta), np.sin(theta)
         self.rotation = np.array(((c, -s), (s, c)))
         self.translation = np.subtract(realPos1, self.rotation.dot(hiddenPos1)).tolist()
+
+        # TODO: populate all hidden
+        
 
 
     def getRot(self, a, b):
@@ -105,6 +109,8 @@ class QRHandler:
         if (data == "" or self.qr_robot_diff.position.x == 0.0):
             return
 
+        print(msg.data)
+
         # decode message
         hidden_x, hidden_y, hidden_x_next, hidden_y_next, n, l = self.unpack_code_message(data)
 
@@ -124,6 +130,7 @@ class QRHandler:
 
         # safe hidden
         self.qr_hidden[n-1] = [hidden_x, hidden_y]
+        self.qr_hidden[n % self._NUM_OF_QR_MARKERS] = [hidden_x_next, hidden_y_next]
 
         self.qr_found[n-1] = True
 

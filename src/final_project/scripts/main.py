@@ -114,7 +114,18 @@ if __name__ == '__main__':
       qr_handler.transInit()
 
     # once at least 2 QRs has been found navigate to the next QR
+    elif sum(qr_handler.qr_found) < qr_handler._NUM_OF_QR_MARKERS:
+      # find qr real position for which real=None and hidden=[x,y]
+      indices = [i for i in range(self._NUM_OF_QR_MARKERS) if (self.qr_hidden[i] != None and self.qr_real[i] == None)]
+      for i in indices:
+        qr_handler.calculate_real(i)
+
+      # navigate to some qr for which we calculated the real position but don't have the letter for yet
+      indices = [i for i in range(qr_handler._NUM_OF_QR_MARKERS) if (qr_handler.word == "")]
+      # TODO: navigate to indices[0]
+
     else:
-      print("use transformation and move to next QR")
+      print("ALL QR FOUND, word: " + str(qr_handler.word))
+
     rate.sleep()
   
