@@ -46,7 +46,7 @@ class Navigator:
         self.client.send_goal(goal)
         
         self.client.wait_for_result()
-        rospy.sleep(3)
+        #rospy.sleep(3)
         rospy.logdebug("{}: Reached goal ({}, {})".format(self._TAG, goal.target_pose.pose.position.x, goal.target_pose.pose.position.y))
 
     def get_coordinates(self):

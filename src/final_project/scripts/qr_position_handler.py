@@ -19,6 +19,7 @@ class QRHandler:
 
     def __init__(self, 
                 listener,
+                nav,
                 word=['']*number_of_qr_markers, 
                 qr_found=[False]*number_of_qr_markers,
                 debug=False):
@@ -33,15 +34,15 @@ class QRHandler:
         # Code word found with QR codes. Structure: [String,String,String,String,String]
         self.word = word
         # List to keep track of which QR markers have been discovered. Structure: [Boolean,Boolean,Boolean,Boolean,Boolean]
-        self.qr_found = qr_found
         self.qr_robot_diff = None
-        self.robot_pose = None
+        self.qr_robot_cov = 10
         self.next_qr_pose = Pose()
 
         self.qr_real = [None]*self.number_of_qr_markers # list of [x,y]
         self.qr_hidden = [None]*self.number_of_qr_markers # list of [x,y]
 
         self.listener = listener
+        self.navigator = nav
 
         # hidden to real transformations
         self.rotation = None
@@ -69,11 +70,11 @@ class QRHandler:
 
 
     def calculate_real(self, i):
-        rospy.logdebug(self._TAG + ": Calculating real position for qr_marker " + str(i) + " from hidden: " + str(self.qr_hidden[i]))
+        # rospy.logdebug(self._TAG + ": Calculating real position for qr_marker " + str(i) + " from hidden: " + str(self.qr_hidden[i]))
         real_transform = np.dot(self.rotation, self.qr_hidden[i]) + self.translation
         self.qr_real[i] = real_transform.tolist()
-        rospy.logdebug(self._TAG + ": Real position for qr_marker " + str(i) + " is: " + str(self.qr_real[i]))
-        rospy.logdebug(self._TAG + ": qr_real array: " + str(self.qr_real))
+        # rospy.logdebug(self._TAG + ": Real position for qr_marker " + str(i) + " is: " + str(self.qr_real[i]))
+        # rospy.logdebug(self._TAG + ": qr_real array: " + str(self.qr_real))
         
 
     def getRot(self, a, b):
@@ -120,32 +121,39 @@ class QRHandler:
         if (self.qr_robot_diff.position.x == 0.0):
             return
 
+
         # decode message
         hidden_x, hidden_y, hidden_x_next, hidden_y_next, n, l = self.unpack_code_message(data)
 
-        # check if this qr has already been processed
-        if self.qr_found[n-1] or self.qr_real[n-1] != None:
+        rospy.logdebug_throttle(0.5, self._TAG + ": Seeing qr_marker " + str(n-1) + ", covariance: " + str(self.qr_robot_cov))
+    
+        if self.word[n-1] == "":
+            # process QR letter and hidden info, even if covariance is high (as cov only matters for position)
+            self.word[n-1] = l
+            # save hidden
+            self.qr_hidden[n-1] = [hidden_x, hidden_y]
+            self.qr_hidden[n % self.number_of_qr_markers] = [hidden_x_next, hidden_y_next]
+            # rospy.logdebug(self._TAG + ": updated qr_hidden: " + str(self.qr_hidden))
+            # rospy.logdebug(self._TAG + ": updated word: " + str(self.word))
+
+        # don't calculate world position if covariance is too high
+        if self.qr_robot_cov > 1e-5:
             return
 
-        rospy.logdebug(self._TAG + ": Seeing qr_marker " + str(n-1) + " for the first time, computing...")
-    
-        # process QR
-        self.word[n-1] = l
+        # don't calculate real pos if it has already been calculated
+        if self.qr_real[n-1] != None:
+            return
 
+        rospy.logdebug(self._TAG + ": calculate real position of qr_marker " + str(n-1))
         # calculate the world position for current qr
-        self.qr_real[n-1] = final_util.calculate_real_qr_xy(self.robot_pose, self.qr_robot_diff, self.listener)
+        self.qr_real[n-1] = final_util.calculate_real_qr_xy(self.navigator.get_coordinates(), self.qr_robot_diff, self.listener)
         if self.debug_mode:
             self.debug_handler.publish('qr_pos', self.qr_real[n-1])
 
-        # safe hidden
-        self.qr_hidden[n-1] = [hidden_x, hidden_y]
-        self.qr_hidden[n % self.number_of_qr_markers] = [hidden_x_next, hidden_y_next]
-
-        rospy.logdebug(self._TAG + ": qr_marker " + str(n-1) + " real is: " + str(self.qr_real[n-1]) + ", and hidden is: " + str(self.qr_hidden[n-1]))
-        rospy.logdebug(self._TAG + ": qr_real array: " + str(self.qr_real))
+        # rospy.logdebug(self._TAG + ": qr_marker " + str(n-1) + " real is: " + str(self.qr_real[n-1]) + ", and hidden is: " + str(self.qr_hidden[n-1]))
+        # rospy.logdebug(self._TAG + ": qr_real array: " + str(self.qr_real))
 
         # set found to true, all the way at the end to avoid concurrency problems
-        self.qr_found[n-1] = True
             
 
     def object_position_cb(self,msg):
@@ -155,10 +163,9 @@ class QRHandler:
         """
         #rospy.loginfo("Receieved object_position: " + str(msg.pose))
         # covariance for x,x and y,y
-        threshold = msg.pose.covariance[0] + msg.pose.covariance[7]
-        rospy.logdebug("Covariance: " + str(threshold))
-        if threshold < 1e-5:
-            self.qr_robot_diff = msg.pose.pose
+        self.qr_robot_cov = msg.pose.covariance[0] + msg.pose.covariance[7]
+        #rospy.logdebug("Covariance: " + str(self.qr_robot_cov))
+        self.qr_robot_diff = msg.pose.pose
 
 
     def qr_reader(self):
@@ -169,6 +176,3 @@ class QRHandler:
 
     def print_word(self):
         return ''.join(self.word)
-
-    def update_robot_pose(self, robot_pose):
-        self.robot_pose = robot_pose

@@ -59,6 +59,12 @@ rot mat:
 trans mat:
 [-1.489408242232296, 0.7119754831249485]
 
+
+
+# TODO LIST:
+- sometimes robot might get a little stuck, needs a bit more testing to see if we can fix this in the navigator
+- maybe initial 2 QR position estimation can be improved a bit having robot pos and qr pos time stamps aligned
+
 """
 
 parser = argparse.ArgumentParser()
@@ -73,14 +79,13 @@ if __name__ == '__main__':
   # init transformlistener
   listener = tf.TransformListener()
 
-  # initialize QR reader and final word variable
-  qr_handler = QRHandler(listener)  
-  qr_handler.qr_reader()
-  # All QR markers have been found when this is true ->   all(i is True for i in QR.qr_found)
-
   # setup wander and Navigator objects
   wan = wander()
   nav = Navigator()        
+
+  # initialize QR reader and final word variable
+  qr_handler = QRHandler(listener, nav)  
+  qr_handler.qr_reader()
 
   # initialize navigator with ROS move_base
   nav.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
@@ -111,33 +116,34 @@ if __name__ == '__main__':
   twist = Twist()
   prev_visit = 99
   while not rospy.is_shutdown():
-
-    # every update pass the robot position to the qr_handler
-    robot_pose = nav.get_coordinates()
-    qr_handler.update_robot_pose(robot_pose)
+    # print 3 arrays every 5 seconds
+    rospy.loginfo_throttle(0.5, "qr_hidden: " + str(qr_handler.qr_hidden))
+    rospy.loginfo_throttle(0.5, "qr_real: " + str(qr_handler.qr_real))
+    rospy.loginfo_throttle(0.5, "word: " + str(qr_handler.word))
 
     # if less than 2 QR codes have been found randomly wander around
-    if sum(qr_handler.qr_found) < 2:
+    if (qr_handler.number_of_qr_markers - qr_handler.qr_real.count(None)) < 2:
 
       twist = wan.move(True)
       cmd_vel_pub.publish(twist)
 
-      qr_handler.qr_found = [True, True, False, False, False]
-      qr_handler.qr_real[4] = [-3.5, -3]
-      qr_handler.qr_real[1] = [-6, 2.95]
-      qr_handler.qr_hidden[4] = [-3.08, 0.0]
-      qr_handler.qr_hidden[1] = [2.67, 3.23]
-      qr_handler.qr_hidden[2] =[0.1, 3.5]
-      qr_handler.word[4] = 't'
-      qr_handler.word[1] = 'M'
+      # uncommented this to start with 2 already found QR points, to test just the transformation and navigation behavior
+      # qr_handler.qr_real[4] = [-3.5, -3]
+      # qr_handler.qr_real[1] = [-6, 2.95]
+      # qr_handler.qr_hidden[4] = [-3.08, 0.0]
+      # qr_handler.qr_hidden[1] = [2.67, 3.23]
+      # qr_handler.qr_hidden[2] =[0.1, 3.5]
+      # qr_handler.word[4] = 't'
+      # qr_handler.word[1] = 'M'
 
     # execute translation computation once when 2 QRs have been found
-    elif (sum(qr_handler.qr_found) >= 2) and (qr_handler.translation == None):
+    elif (qr_handler.number_of_qr_markers - qr_handler.qr_real.count(None) >= 2) and (qr_handler.translation == None):
       # compute translation matrix
       qr_handler.transInit()
 
     # once at least 2 QRs has been found navigate to the next QR
-    elif sum(qr_handler.qr_found) < qr_handler.number_of_qr_markers:
+    elif not all(qr_handler.word):
+      # rospy.logdebug("Current letters:" + str(qr_handler.word))
       # find qr real position for which real=None and hidden=[x,y]
       indices_missing_transform = [i for i in range(qr_handler.number_of_qr_markers) if (qr_handler.qr_hidden[i] != None and qr_handler.qr_real[i] == None)]
       rospy.logdebug("Missing transformed indices: " + str(indices_missing_transform))
@@ -156,10 +162,12 @@ if __name__ == '__main__':
         prev_visit = indices_missing_word[0]
 
       rospy.logdebug("Navigating to QR marker at ({}, {})".format(goal[0], goal[1]))
-      nav.move_to_pose(Pose(Point(goal[0], goal[1], 0), robot_pose.orientation))
+      # TODO: currently move to pose hangs the while loop, it waits until moving is finished, this probably isn't what we want
+      nav.move_to_pose(Pose(Point(goal[0], goal[1], 0), nav.get_coordinates().orientation))
 
     else:
       rospy.loginfo("ALL QR FOUND, word: " + str(qr_handler.word))
+      break
 
     rate.sleep()
   
