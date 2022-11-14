@@ -3,17 +3,13 @@ from distutils.spawn import spawn
 import rospy, tf, actionlib, tf_conversions
 from wander import wander
 from qr_position_handler import QRHandler
-import os
-import argparse
+import os, argparse, time
+
 from sensor_msgs.msg import LaserScan
-from geometry_msgs.msg import Twist
-import time
 from navigator import Navigator
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from gazebo_msgs.msg import ModelStates
-from geometry_msgs.msg import *
-import tf
-import tf_conversions
+from geometry_msgs.msg import Pose, Quaternion, Point, Twist
 from tf.transformations import euler_from_quaternion, quaternion_from_euler, quaternion_matrix, concatenate_matrices, translation_matrix
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_msgs.msg import Int8, String
@@ -114,18 +110,20 @@ if __name__ == '__main__':
       qr_handler.transInit()
 
     # once at least 2 QRs has been found navigate to the next QR
-    elif sum(qr_handler.qr_found) < qr_handler._NUM_OF_QR_MARKERS:
+    elif sum(qr_handler.qr_found) < qr_handler.number_of_qr_markers:
       # find qr real position for which real=None and hidden=[x,y]
-      indices = [i for i in range(self._NUM_OF_QR_MARKERS) if (self.qr_hidden[i] != None and self.qr_real[i] == None)]
-      for i in indices:
+      indices_missing_transform = [i for i in range(qr_handler.number_of_qr_markers) if (qr_handler.qr_hidden[i] != None and qr_handler.qr_real[i] == None)]
+      for i in indices_missing_transform:
         qr_handler.calculate_real(i)
 
       # navigate to some qr for which we calculated the real position but don't have the letter for yet
-      indices = [i for i in range(qr_handler._NUM_OF_QR_MARKERS) if (qr_handler.word == "")]
+      indices_missing_word = [i for i in range(qr_handler.number_of_qr_markers) if (qr_handler.word[i] == "" and qr_handler.qr_real[i] != None)]
       # TODO: navigate to indices[0]
+      goal = qr_handler.qr_real[indices_missing_word[0]]
+      nav.move_to_pose(Pose(Point(goal[0], goal[1], 0), robot_pose.orientation))
 
     else:
-      print("ALL QR FOUND, word: " + str(qr_handler.word))
+      rospy.loginfo("ALL QR FOUND, word: " + str(qr_handler.word))
 
     rate.sleep()
   

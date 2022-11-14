@@ -1,8 +1,7 @@
-import rospy, tf, actionlib, tf_conversions
-from geometry_msgs.msg import Twist
+import rospy, tf, tf_conversions
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
  
-from geometry_msgs.msg import *
+from geometry_msgs.msg import Pose, Quaternion
 
 class Navigator:
     """
@@ -10,6 +9,7 @@ class Navigator:
     """
 
     _MAP_FRAME_ID = 'map'
+    _TAG = 'NAVIGATOR'
 
     _waypoints = [  
         [(1.13, -1.6, 0.0), (0.0, 0.0, -0.16547, -0.986213798314)],
@@ -46,13 +46,13 @@ class Navigator:
         
         self.client.wait_for_result()
         rospy.sleep(3)
-        print('reached goal')
+        rospy.logdebug("{}: Reached goal {}, {}".format(self._TAG, pose.position.x, pose.position.y))
 
     def get_coordinates(self):
         """
         loop through all models in scene and get position of robot
         """
-        pose = geometry_msgs.msg.Pose()
+        pose = Pose()
 
         for i in range(len(self.message.name)):
 

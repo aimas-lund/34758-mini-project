@@ -14,12 +14,12 @@ class QRHandler:
     Look for QR codes and decode/unpack them
     """
     # TODO: make this dynamic, it can change
-    _NUM_OF_QR_MARKERS = 5
+    number_of_qr_markers = 5
 
     def __init__(self, 
                 listener,
-                word=['']*_NUM_OF_QR_MARKERS, 
-                qr_found=[False]*_NUM_OF_QR_MARKERS,
+                word=['']*number_of_qr_markers, 
+                qr_found=[False]*number_of_qr_markers,
                 debug=False):
         # a map of publishers which the QR Handler can publish intermediate values with 
         self.debug_mode = debug
@@ -37,9 +37,8 @@ class QRHandler:
         self.robot_pose = None
         self.next_qr_pose = Pose()
 
-        self.qr_real = [None]*self._NUM_OF_QR_MARKERS
-        self.qr_hidden = [None]*self._NUM_OF_QR_MARKERS
-        #self.qr_hidden_next =[None]*self._NUM_OF_QR_MARKERS
+        self.qr_real = [None]*self.number_of_qr_markers # list of [x,y]
+        self.qr_hidden = [None]*self.number_of_qr_markers # list of [x,y]
 
         self.listener = listener
 
@@ -50,7 +49,7 @@ class QRHandler:
 
     def transInit(self): #give args as numpy arrays
         # found qr markers
-        indices = [i for i in range(self._NUM_OF_QR_MARKERS) if self.qr_real[i]]
+        indices = [i for i in range(self.number_of_qr_markers) if self.qr_real[i]]
 
         realPos1 = self.qr_real[indices[0]]
         realPos2 = self.qr_real[indices[1]]
@@ -65,9 +64,14 @@ class QRHandler:
         self.rotation = np.array(((c, -s), (s, c)))
         self.translation = np.subtract(realPos1, self.rotation.dot(hiddenPos1)).tolist()
 
-        # TODO: populate all hidden
-        
 
+    def calculate_real(self, i):
+        rospy.logdebug("Calculating real position for qr_marker " + str(i) + " from hidden: " + str(self.qr_hidden[i]))
+        real_transform = self.rotation.dot(self.qr_hidden[i]) + self.translation
+        self.qr_real[i] = real_transform.tolist()
+        rospy.logdebug("Real position for qr_marker " + str(i) + " is: " + str(self.qr_real[i]))
+        rospy.logdebug("qr_real array: " + str(self.qr_real))
+        
 
     def getRot(self, a, b):
         lenA = np.linalg.norm(a)
@@ -106,10 +110,12 @@ class QRHandler:
 
         # ensure both code_message and object_position have been received
         data = str(msg.data)
-        if (data == "" or self.qr_robot_diff.position.x == 0.0):
+        if (data == ""):
             return
-
-        print(msg.data)
+        if (self.qr_robot_diff == None):
+            return
+        if (self.qr_robot_diff.position.x == 0.0):
+            return
 
         # decode message
         hidden_x, hidden_y, hidden_x_next, hidden_y_next, n, l = self.unpack_code_message(data)
@@ -118,7 +124,7 @@ class QRHandler:
         if self.qr_found[n-1]:
             return
 
-        rospy.logdebug("Found " + str(n) + " for the first time, computing...")
+        rospy.logdebug("Found qr_marker " + str(n-1) + " for the first time, computing...")
     
         # process QR
         self.word[n-1] = l
@@ -130,17 +136,13 @@ class QRHandler:
 
         # safe hidden
         self.qr_hidden[n-1] = [hidden_x, hidden_y]
-        self.qr_hidden[n % self._NUM_OF_QR_MARKERS] = [hidden_x_next, hidden_y_next]
+        self.qr_hidden[n % self.number_of_qr_markers] = [hidden_x_next, hidden_y_next]
 
+        rospy.logdebug("qr_marker " + str(n-1) + " real is: " + str(self.qr_real[n-1]) + ", and hidden is: " + str(self.qr_hidden[n-1]))
+        rospy.logdebug("qr_real array: " + str(self.qr_real))
+
+        # set found to true, all the way at the end to avoid concurrency problems
         self.qr_found[n-1] = True
-
-        # TODO: safe world qr pos to pair with hidden qr pos (array of [hidden, real])
-
-        # TODO: if it's the first QR calculate the hidden frame (in main maybe)
-        #self.next_qr_pose = final_util.calculate_next_qr_pose(self.robot_pose, self.qr_robot_diff, hidden_x, hidden_y, hidden_x_next, hidden_y_next)
-        #rospy.logdebug(" -- qr_position_handler loop --")
-        #rospy.logdebug("Found QR number: " + str(n) + ", with letter: " + l + ", at real position: " + str(current_qr_pose))
-        #rospy.logdebug("navigate to: " + str(self.next_qr_pose.position) + ", from current pos: " + str(self.robot_pose.position))
             
 
     def object_position_cb(self,msg):
