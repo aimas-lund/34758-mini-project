@@ -13,6 +13,37 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import *
 
+"""
+- - - software structure - - -
+
+main.py:
+- initialize objects
+- main loop
+  - looking for first QR
+  - looking for next QR
+  - done
+
+navigator.py:
+- keep track of robot position
+- navigate to positio
+
+qr_position_handler.py:
+- reading QR codes
+- using util for coordinate conversion
+
+final_util.py:
+- coordinate conversion
+- coordinate system calculation
+
+- - - other - - -
+key_navigation.py:  control robot manually
+key_publisher.py:   control robot manually
+range_ahead.py:     see how much distance is free in front of robot
+spawn_barriers.py:  spawn barriers
+spawn_markers.py:   spawn markers
+wander.py:          move around randomly
+"""
+
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--debug", action='store_true', 
                     help = "Configure extra publishers for more information in rviz for debugging purposes.")

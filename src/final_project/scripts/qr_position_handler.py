@@ -70,7 +70,7 @@ class QRHandler:
             if self.debug_mode:
                 self.debug_handler.publish('qr_pos', current_qr_pose)
 
-            self.next_qr_pose = final_util.calculate_next_qr_pose(self.robot_pose, self.qr_robot_diff, hidden_x, hidden_y)
+            self.next_qr_pose = final_util.calculate_next_qr_pose(self.robot_pose, self.qr_robot_diff, hidden_x, hidden_y, hidden_x_next, hidden_y_next)
             rospy.logdebug(" -- qr_position_handler loop --")
             rospy.logdebug("Found QR number: " + str(n) + ", with letter: " + l + ", at real position: " + str(current_qr_pose))
             rospy.logdebug("navigate to: " + str(self.next_qr_pose.position) + ", from current pos: " + str(self.robot_pose.position))
