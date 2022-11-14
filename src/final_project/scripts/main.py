@@ -12,6 +12,12 @@ from navigator import Navigator
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from gazebo_msgs.msg import ModelStates
 from geometry_msgs.msg import *
+import tf
+import tf_conversions
+from tf.transformations import euler_from_quaternion, quaternion_from_euler, quaternion_matrix, concatenate_matrices, translation_matrix
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from std_msgs.msg import Int8, String
+from nav_msgs.msg import Odometry
 
 """
 - - - software structure - - -
@@ -25,7 +31,7 @@ main.py:
 
 navigator.py:
 - keep track of robot position
-- navigate to positio
+- navigate to position
 
 qr_position_handler.py:
 - reading QR codes
@@ -50,11 +56,8 @@ parser.add_argument("-d", "--debug", action='store_true',
 args = parser.parse_args()
 
 if __name__ == '__main__':
-  if (args.debug):
-    rospy.logdebug("--- Running '%s' in debug mode ---", os.path.basename(__file__))
-    rospy.logdebug("Will publish additional information to help debug in Rviz.")
   # initialize QR reader and final word variable
-  qr_handler = QRHandler(debug=args.debug)  
+  qr_handler = QRHandler()  
   qr_handler.qr_reader()
   # All QR markers have been found when this is true ->   all(i is True for i in QR.qr_found)
 
@@ -63,7 +66,9 @@ if __name__ == '__main__':
   nav = Navigator()        
 
   # init node so that topics can be published (log level logdebug,logwarn,loginfo,logerr,logfatal)
-  rospy.init_node('final', log_level=rospy.DEBUG)
+  rospy.init_node('final')
+
+  listener = tf.TransformListener()
 
   # initialize navigator with ROS move_base
   nav.client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
@@ -77,34 +82,44 @@ if __name__ == '__main__':
 
   #Subscribing to the topic /gazebo/model_states to read the positions of the cube and bucket
   rospy.Subscriber('/gazebo/model_states', ModelStates, nav.sub_cal, queue_size=1000)
+
+  ob_postion_relative = PoseWithCovarianceStamped
+  qr_status = rospy.Subscriber('visp_auto_tracker/status', Int8, qr_handler.qr_status_callback)
+  qr_obj_pos_cov = rospy.Subscriber('visp_auto_tracker/object_position_covariance', PoseWithCovarianceStamped, qr_handler.qr_tf_cov_callback)
+  qr_msg = rospy.Subscriber('visp_auto_tracker/code_message', String, qr_handler.qr_msg_callback)
+  odom = rospy.Subscriber('odom', Odometry, qr_handler.odom_callbak)
+  client = actionlib.SimpleActionClient('move_base', MoveBaseAction) 
+  
   rospy.sleep(2)
   rate = rospy.Rate(60)
 
   # start main loop (until all QR codes are found)
   twist = Twist()
-  while not rospy.is_shutdown() or not all(qr_handler.qr_found):
+  while not rospy.is_shutdown():
 
     robot_pose = nav.get_coordinates()
     qr_handler.update_robot_pose(robot_pose)
 
     # if no single QR code has been found randomly wander around
-    if not any(qr_handler.qr_found):
-      rospy.logdebug("wandering")
+    if sum(qr_handler.qr_found) < 2:
 
       twist = wan.move(True)
       cmd_vel_pub.publish(twist)
 
     # once at leastone QR has been found navigate to the next QR
     else:
-      rospy.logdebug("QR found, moving to next QR: " + str(qr_handler.next_qr_pose))
-      twist = wan.move(False)
-      cmd_vel_pub.publish(twist)
-
-      next_qr = qr_handler.next_qr_pose  
-      #nav.move_to_pose(next_qr)
-
+      if qr_handler.new_qrfound:
+        cam_to_marker_pose = [qr_handler.qr_robot_diff.pose.position.x, qr_handler.qr_robot_diff.pose.position.y, qr_handler.qr_robot_diff.pose.position.z, 1];
+        try:
+            (trans,rot) = listener.lookupTransform('/odom', '/camera_optical_link', rospy.Time(0))
+        
+            trans_matrix = translation_matrix(trans)
+            rot_matrix = quaternion_matrix(rot)
+            conversion_matrices = concatenate_matrices(trans_matrix,rot_matrix)
+            qr_real_pos = conversion_matrices.dot(cam_to_marker_pose)
+            print('Real',qr_real_pos)
+        except:
+            print('Unable to calculate transformations')
+      continue
     rate.sleep()
-
-  rospy.loginfo("All QR's have been discovered!")
-  rospy.loginfo("Code word was: " + qr_handler.print_word())
   

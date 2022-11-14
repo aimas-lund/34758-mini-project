@@ -71,3 +71,19 @@ class Navigator:
                 self.robot_pos= self.message.pose[i]             
         
         return pose
+
+
+        def getRot(self,a,b):
+            lenA = np.linalg.norm(a)
+            lenB = np.linalg.norm(b)
+            lenC = np.linalg.norm(a-b)
+            rotAngle= math.acos((math.pow(lenA,2)+math.pow(lenB,2) - math.pow(lenC,2))/(2*lenA*lenB))
+            return rotAngle
+
+        def calculate_next_pose(pose_world,pose): 
+            observe_offset_scale_x = 0.75
+            observe_offset_scale_y = 1
+            new_x =   pose_world[0][0] - observe_offset_scale_x * np.sign(pose_world[0][0]-pose[0][0])
+            new_y = pose_world[0][1] - observe_offset_scale_y * np.sign(pose_world[0][1]-pose[0][1])
+            new_pose = [(new_x, new_y, pose_world[0][2]),  (pose_world[1][0], pose_world[1][1], pose_world[1][2], pose_world[1][3])]  
+            return new_pose
