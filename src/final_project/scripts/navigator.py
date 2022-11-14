@@ -41,12 +41,13 @@ class Navigator:
 
 
     def move_to_pose(self, pose, frame_id=_MAP_FRAME_ID):
+        rospy.logdebug("{}: Moving to ({}, {})".format(self._TAG, pose.position.x, pose.position.y))
         goal = self._goal_pose(pose)
         self.client.send_goal(goal)
         
         self.client.wait_for_result()
         rospy.sleep(3)
-        rospy.logdebug("{}: Reached goal {}, {}".format(self._TAG, pose.position.x, pose.position.y))
+        rospy.logdebug("{}: Reached goal ({}, {})".format(self._TAG, goal.target_pose.pose.position.x, goal.target_pose.pose.position.y))
 
     def get_coordinates(self):
         """

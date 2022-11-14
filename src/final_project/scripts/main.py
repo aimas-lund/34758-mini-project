@@ -113,13 +113,16 @@ if __name__ == '__main__':
     elif sum(qr_handler.qr_found) < qr_handler.number_of_qr_markers:
       # find qr real position for which real=None and hidden=[x,y]
       indices_missing_transform = [i for i in range(qr_handler.number_of_qr_markers) if (qr_handler.qr_hidden[i] != None and qr_handler.qr_real[i] == None)]
+      rospy.logdebug("Missing transformed indices: " + str(indices_missing_transform))
       for i in indices_missing_transform:
         qr_handler.calculate_real(i)
 
       # navigate to some qr for which we calculated the real position but don't have the letter for yet
       indices_missing_word = [i for i in range(qr_handler.number_of_qr_markers) if (qr_handler.word[i] == "" and qr_handler.qr_real[i] != None)]
-      # TODO: navigate to indices[0]
+      rospy.logdebug("Missing located indices: " + str(indices_missing_word))
+      
       goal = qr_handler.qr_real[indices_missing_word[0]]
+      rospy.logdebug("Navigating to QR marker at ({}, {})".format(goal[0], goal[1]))
       nav.move_to_pose(Pose(Point(goal[0], goal[1], 0), robot_pose.orientation))
 
     else:
