@@ -57,7 +57,7 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
   # init node so that topics can be published (log level logdebug,logwarn,loginfo,logerr,logfatal)
-  rospy.init_node('final')
+  rospy.init_node('final', log_level=rospy.DEBUG)
 
   # init transformlistener
   listener = tf.TransformListener()
@@ -108,20 +108,13 @@ if __name__ == '__main__':
       twist = wan.move(True)
       cmd_vel_pub.publish(twist)
 
+    # execute translation computation once when 2 QRs have been found
+    elif sum(qr_handler.qr_found) == 2 and qr_handler.translation == None:
+      # compute translation matrix
+      qr_handler.transInit()
+
     # once at least 2 QRs has been found navigate to the next QR
     else:
-      if qr_handler.new_qrfound:
-        cam_to_marker_pose = [qr_handler.qr_robot_diff.pose.position.x, qr_handler.qr_robot_diff.pose.position.y, qr_handler.qr_robot_diff.pose.position.z, 1];
-        try:
-            (trans,rot) = listener.lookupTransform('/odom', '/camera_optical_link', rospy.Time(0))
-        
-            trans_matrix = translation_matrix(trans)
-            rot_matrix = quaternion_matrix(rot)
-            conversion_matrices = concatenate_matrices(trans_matrix,rot_matrix)
-            qr_real_pos = conversion_matrices.dot(cam_to_marker_pose)
-            print('Real',qr_real_pos)
-        except:
-            print('Unable to calculate transformations')
-      continue
+      print("use transformation and move to next QR")
     rate.sleep()
   

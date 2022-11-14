@@ -62,8 +62,6 @@ def calculate_real_qr_xy(robot_pose, qr_robot_diff, listener):
         T_odomo_camera = concatenate_matrices(t,matrix_rot)
         p_qr = T_odomo_camera.dot(pose_camera)
 
-        rospy.loginfo("p_qr: " + str(p_qr))
-
         return [p_qr[0], p_qr[1]]
     except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
         print("Error in the listener lookup transformations")

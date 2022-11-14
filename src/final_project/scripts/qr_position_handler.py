@@ -4,6 +4,8 @@ from geometry_msgs.msg import PoseStamped, Pose
 from debug_handler import DebugPublishHandler
 import tf
 import tf_conversions
+import numpy as np
+import math
 
 import final_util
 
@@ -11,6 +13,7 @@ class QRHandler:
     """
     Look for QR codes and decode/unpack them
     """
+    # TODO: make this dynamic, it can change
     _NUM_OF_QR_MARKERS = 5
 
     def __init__(self, 
@@ -38,6 +41,36 @@ class QRHandler:
         self.qr_hidden = [None]*self._NUM_OF_QR_MARKERS
 
         self.listener = listener
+
+        # hidden to real transformations
+        self.rotation = None
+        self.translation = None
+
+
+    def transInit(self): #give args as numpy arrays
+        # found qr markers
+        indices = [i for i in range(self._NUM_OF_QR_MARKERS) if self.qr_real[i]]
+
+        realPos1 = self.qr_real[indices[0]]
+        realPos2 = self.qr_real[indices[1]]
+        hiddenPos1 = self.qr_hidden[indices[0]]
+        hiddenPos2 = self.qr_hidden[indices[1]]
+
+        # compute hidden translation matrix
+        realPosVector = np.subtract(realPos1, realPos2)
+        hiddenPosVector = np.subtract(hiddenPos1, hiddenPos2)
+        theta = self.getRot(realPosVector, hiddenPosVector) # gets angle in radians
+        c, s = np.cos(theta), np.sin(theta)
+        self.rotation = np.array(((c, -s), (s, c)))
+        self.translation = np.subtract(realPos1, self.rotation.dot(hiddenPos1)).tolist()
+
+
+    def getRot(self, a, b):
+        lenA = np.linalg.norm(a)
+        lenB = np.linalg.norm(b)
+        lenC = np.linalg.norm(a - b)
+
+        return math.acos((math.pow(lenA, 2) + math.pow(lenB, 2) - math.pow(lenC, 2)) / (2 * lenA * lenB))
 
 
     def unpack_code_message(self,msg):
@@ -83,7 +116,6 @@ class QRHandler:
     
         # process QR
         self.word[n-1] = l
-        self.qr_found[n-1] = True
 
         # calculate the world position for current qr
         self.qr_real[n-1] = final_util.calculate_real_qr_xy(self.robot_pose, self.qr_robot_diff, self.listener)
@@ -92,6 +124,8 @@ class QRHandler:
 
         # safe hidden
         self.qr_hidden[n-1] = [hidden_x, hidden_y]
+
+        self.qr_found[n-1] = True
 
         # TODO: safe world qr pos to pair with hidden qr pos (array of [hidden, real])
 
