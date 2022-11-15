@@ -2,8 +2,6 @@ import rospy
 from std_msgs.msg import String
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose
 from debug_handler import DebugPublishHandler
-import tf
-import tf_conversions
 import numpy as np
 import math
 
@@ -144,7 +142,7 @@ class QRHandler:
 
         rospy.logdebug(self._TAG + ": calculate real position of qr_marker " + str(n-1))
         # calculate the world position for current qr
-        self.qr_real[n-1] = final_util.calculate_real_qr_xy(self.navigator.get_coordinates(), self.qr_robot_diff, self.listener)
+        self.qr_real[n-1] = final_util.calculate_real_qr_xy(self.qr_robot_diff, self.listener)
         if self.debug_mode:
             self.debug_handler.publish('qr_pos', self.qr_real[n-1])
 
