@@ -99,13 +99,6 @@ if __name__ == '__main__':
 
   #Subscribing to the topic /gazebo/model_states to read the positions of the cube and bucket
   rospy.Subscriber('/gazebo/model_states', ModelStates, nav.sub_cal, queue_size=1000)
-
-  #ob_postion_relative = PoseWithCovarianceStamped
-  #qr_status = rospy.Subscriber('visp_auto_tracker/status', Int8, qr_handler.qr_status_callback)
-  #qr_obj_pos_cov = rospy.Subscriber('visp_auto_tracker/object_position_covariance', PoseWithCovarianceStamped, qr_handler.qr_tf_cov_callback)
-  #qr_msg = rospy.Subscriber('visp_auto_tracker/code_message', String, qr_handler.qr_msg_callback)
-  #odom = rospy.Subscriber('odom', Odometry, qr_handler.odom_callbak)
-  #client = actionlib.SimpleActionClient('move_base', MoveBaseAction) 
   
   rospy.sleep(2)
   rate = rospy.Rate(60)
@@ -143,7 +136,6 @@ if __name__ == '__main__':
 
     # once at least 2 QRs has been found navigate to the next QR
     elif not all(qr_handler.word):
-      # rospy.logdebug("Current letters:" + str(qr_handler.word))
       # find qr real position for which real=None and hidden=[x,y]
       indices_missing_transform = [i for i in range(qr_handler.number_of_qr_markers) if (qr_handler.qr_hidden[i] != None and qr_handler.qr_real[i] == None)]
       rospy.logdebug("Missing transformed indices: " + str(indices_missing_transform))
