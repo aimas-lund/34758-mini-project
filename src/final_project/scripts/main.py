@@ -1,19 +1,15 @@
 #!/usr/bin/env python
-from distutils.spawn import spawn
-import rospy, tf, actionlib, tf_conversions
+import rospy, tf, actionlib
 from wander import wander
 from qr_position_handler import QRHandler
-import os, argparse, time
+import argparse
 
 from sensor_msgs.msg import LaserScan
 from navigator import Navigator
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+from move_base_msgs.msg import MoveBaseAction
 from gazebo_msgs.msg import ModelStates
-from geometry_msgs.msg import Pose, Quaternion, Point, Twist
-from tf.transformations import euler_from_quaternion, quaternion_from_euler, quaternion_matrix, concatenate_matrices, translation_matrix
-from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
-from std_msgs.msg import Int8, String
-from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Pose, Point, Twist
+from move_base_msgs.msg import MoveBaseAction
 
 """
 - - - software structure - - -
@@ -120,7 +116,7 @@ if __name__ == '__main__':
       twist = wan.move(True)
       cmd_vel_pub.publish(twist)
 
-      # uncommented this to start with 2 already found QR points, to test just the transformation and navigation behavior
+      # outcommented this to start with 2 already found QR points, to test just the transformation and navigation behavior
       # qr_handler.qr_real[4] = [-3.5, -3]
       # qr_handler.qr_real[1] = [-6, 2.95]
       # qr_handler.qr_hidden[4] = [-3.08, 0.0]
