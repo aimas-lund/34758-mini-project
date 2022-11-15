@@ -49,22 +49,35 @@ class QRHandler:
         self.translation = None
 
 
-    def transInit(self): #give args as numpy arrays
+    def calculateTranslationAndRotation(self): 
+        """
+            Function for computing translation and rotation. 
+            Requires that minimum two QR markers have been discoved.
+        """
         # found qr markers
         indices = [i for i in range(self.number_of_qr_markers) if self.qr_real[i]]
 
-        realPos1 = self.qr_real[indices[0]]
-        realPos2 = self.qr_real[indices[1]]
-        hiddenPos1 = self.qr_hidden[indices[0]]
-        hiddenPos2 = self.qr_hidden[indices[1]]
+        realQR1 = self.qr_real[indices[0]]
+        realQR2 = self.qr_real[indices[1]]
+        hiddenQR1 = self.qr_hidden[indices[0]]
+        hiddenQR2 = self.qr_hidden[indices[1]]
 
-        # compute hidden translation matrix
-        realPosVector = np.subtract(realPos1, realPos2)
-        hiddenPosVector = np.subtract(hiddenPos1, hiddenPos2)
-        theta = self.getRot(realPosVector, hiddenPosVector) # gets angle in radians
-        c, s = np.cos(theta), np.sin(theta)
-        self.rotation = np.array(((c, -s), (s, c)))
-        self.translation = np.subtract(realPos1, self.rotation.dot(hiddenPos1)).tolist()
+        # translate QR hidden/real positions into vectors
+        realQRVector = np.subtract(realQR1, realQR2)
+        hiddenQRVector = np.subtract(hiddenQR1, hiddenQR2)
+
+        # compute angle between vectors
+        real_length = np.linalg.norm(realQRVector)
+        hidden_length = np.linalg.norm(hiddenQRVector)
+        diff_length = np.linalg.norm(realQRVector - hiddenQRVector)
+        theta = math.acos((math.pow(real_length, 2) + math.pow(hidden_length, 2) - math.pow(diff_length, 2)) / (2 * real_length * hidden_length))
+
+        # compute translation and rotation
+        self.rotation = np.array(((np.cos(theta), -np.sin(theta)), 
+                                  (np.sin(theta),  np.cos(theta))))
+        self.translation = np.subtract(realQR1, self.rotation.dot(hiddenQR1)).tolist()
+
+        # log results
         rospy.logdebug("{}: Obtained rotation matrix -> {}".format(self._TAG, self.rotation))
         rospy.logdebug("{}: Obtained translation matrix -> {}".format(self._TAG, self.translation))
 
@@ -76,14 +89,6 @@ class QRHandler:
         # rospy.logdebug(self._TAG + ": Real position for qr_marker " + str(i) + " is: " + str(self.qr_real[i]))
         # rospy.logdebug(self._TAG + ": qr_real array: " + str(self.qr_real))
         
-
-    def getRot(self, a, b):
-        lenA = np.linalg.norm(a)
-        lenB = np.linalg.norm(b)
-        lenC = np.linalg.norm(a - b)
-
-        return math.acos((math.pow(lenA, 2) + math.pow(lenB, 2) - math.pow(lenC, 2)) / (2 * lenA * lenB))
-
 
     def unpack_code_message(self,msg):
         """

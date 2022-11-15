@@ -139,7 +139,7 @@ if __name__ == '__main__':
     # execute translation computation once when 2 QRs have been found
     elif (qr_handler.number_of_qr_markers - qr_handler.qr_real.count(None) >= 2) and (qr_handler.translation == None):
       # compute translation matrix
-      qr_handler.transInit()
+      qr_handler.calculateTranslationAndRotation()
 
     # once at least 2 QRs has been found navigate to the next QR
     elif not all(qr_handler.word):
